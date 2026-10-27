@@ -56,47 +56,6 @@ function h($value) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
-<style>
-.login-page{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(900px 500px at 0% 0%,rgba(29,74,133,.18),transparent 65%),var(--bg)}
-.login-main{flex:1;display:grid;grid-template-columns:1fr 1fr;max-width:1160px;width:92%;margin:42px auto;gap:54px;align-items:center}
-.login-intro{padding:24px 0}
-.login-intro .pill{margin-bottom:22px}
-.login-intro h1{font-size:clamp(2.2rem,4.2vw,3.5rem);line-height:1.12;letter-spacing:-1.3px;color:var(--navy);font-weight:800}
-.login-intro h1 span{color:var(--amber-d)}
-.login-intro>p{font-size:1.03rem;color:var(--muted);max-width:490px;margin:20px 0 28px}
-.login-points{display:grid;gap:14px;margin-top:30px}
-.login-point{display:flex;align-items:center;gap:12px;color:var(--navy);font-size:.92rem;font-weight:700}
-.login-point .point-icon{width:34px;height:34px;border-radius:10px;background:#fff3df;color:var(--amber-d);display:grid;place-items:center;flex:none}
-.login-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:clamp(25px,4vw,42px);box-shadow:0 22px 60px rgba(11,31,58,.12)}
-.login-card-head{margin-bottom:26px}
-.login-symbol{width:54px;height:54px;border-radius:16px;background:var(--navy);color:var(--amber);display:grid;place-items:center;font-size:1.35rem;font-weight:800;margin-bottom:20px}
-.login-card h2{font-size:1.65rem;line-height:1.25;color:var(--navy);letter-spacing:-.5px}
-.login-card-head p{color:var(--muted);font-size:.9rem;margin-top:8px}
-.login-form{display:grid;gap:18px}
-.login-form .form-row{display:grid;gap:7px}
-.login-form label{font-size:.86rem;font-weight:700;color:var(--navy)}
-.login-form input,.login-form select{width:100%;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font:inherit;font-size:.93rem;color:var(--ink);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
-.login-form input:focus,.login-form select:focus{border-color:var(--amber-d);box-shadow:0 0 0 3px rgba(255,159,28,.15)}
-.password-wrap{position:relative}
-.password-wrap input{padding-right:82px}
-.password-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--navy-2);font:inherit;font-size:.8rem;font-weight:800;cursor:pointer;padding:6px}
-.form-options{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.83rem}
-.remember{display:flex;align-items:center;gap:8px;color:var(--muted);cursor:pointer}
-.remember input{width:16px;height:16px;accent-color:var(--navy);margin:0}
-.text-link{color:var(--navy-2);font-weight:800}
-.text-link:hover{color:var(--amber-d);text-decoration:underline}
-.login-submit{width:100%;margin-top:2px;min-height:48px}
-.login-notice{display:none;padding:12px 14px;border-radius:10px;background:#fff3df;color:#704700;font-size:.84rem;border:1px solid #ffe0ad}
-.login-notice.show{display:block}
-.login-divider{display:flex;align-items:center;gap:12px;color:#8a94a3;font-size:.76rem;margin:20px 0}
-.login-divider:before,.login-divider:after{content:"";height:1px;background:var(--line);flex:1}
-.login-bottom{text-align:center;color:var(--muted);font-size:.86rem}
-.login-footer{padding:18px 4%;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#7b8797;font-size:.78rem;border-top:1px solid var(--line);background:rgba(255,255,255,.7)}
-.login-footer a{color:var(--navy-2);font-weight:700}
-.staff-note{padding:12px 14px;border-radius:12px;background:#f0f4fa;color:var(--muted);font-size:.8rem}
-@media(max-width:850px){.login-main{grid-template-columns:1fr;max-width:540px;gap:20px;margin:26px auto 36px}.login-intro{padding:10px 0}.login-intro h1{font-size:2.4rem}.login-points{grid-template-columns:1fr 1fr}.login-point{font-size:.8rem;align-items:flex-start}}
-@media(max-width:520px){.login-points{grid-template-columns:1fr}.login-card{padding:24px 20px}.login-intro h1{font-size:2.1rem}.login-footer{justify-content:center;text-align:center}}
-</style>
 </head>
 <body class="login-page">
 <header>
@@ -105,7 +64,7 @@ function h($value) {
       <div class="logo">H</div>
       <div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div>
     </a>
-    <nav class="menu" style="display:flex">
+    <nav class="menu login-menu">
       <a class="link" href="index.php#services">Services</a>
       <a class="link" href="index.php#how">How it works</a>
       <a class="btn btn-ghost" href="index.php">Home</a>
@@ -174,7 +133,7 @@ function h($value) {
     <div class="login-divider">NEW TO HELMS?</div>
     <p class="login-bottom">Need a customer account? <a class="text-link" href="register.php?type=individual">Create an account</a></p>
     <?php elseif ($portal === 'staff'): ?>
-    <div class="staff-note" style="margin-top:22px">Staff accounts are created by an authorized system administrator. If you need access, contact your supervisor or system administrator.</div>
+    <div class="staff-note">Staff accounts are created by an authorized system administrator. If you need access, contact your supervisor or system administrator.</div>
     <?php else: ?>
     <div class="staff-note" style="margin-top:22px">Driver accounts are provisioned by the company. If you cannot sign in, contact your transport supervisor.</div>
     <?php endif; ?>
