@@ -48,21 +48,24 @@ function h($value) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= h($page['title']) ?> | HELMS</title>
-<meta name="description" content="Sign in to the Henowic Enterprise Logistics Management System.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= h($page['title']) ?> | HELMS</title>
+  <meta name="description" content="Sign in to the Henowic Enterprise Logistics Management System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="login-page">
 <header>
   <div class="container nav">
     <a href="index.php" class="brand" aria-label="HELMS home">
       <div class="logo">H</div>
-      <div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div>
+      <div>
+        <b>HELMS</b>
+        <small>Henowic Inventors (Pvt) Ltd.</small>
+      </div>
     </a>
     <nav class="menu login-menu">
       <a class="link" href="index.php#services">Services</a>
@@ -75,13 +78,28 @@ function h($value) {
 <main class="login-main">
   <section class="login-intro">
     <span class="pill"><?= h($page['eyebrow']) ?> &middot; HELMS</span>
-    <h1>Welcome back.<br><span>Let's get moving.</span></h1>
+    <h1>
+      Welcome back.<br>
+      <span>Let's get moving.</span>
+    </h1>
     <p><?= h($page['description']) ?> HELMS brings parcel delivery and logistics operations together in one secure workspace.</p>
     <div class="login-points">
-      <div class="login-point"><span class="point-icon">✓</span><span>One connected logistics platform</span></div>
-      <div class="login-point"><span class="point-icon">✓</span><span>Parcel status and delivery updates</span></div>
-      <div class="login-point"><span class="point-icon">✓</span><span>Role-based workspace access</span></div>
-      <div class="login-point"><span class="point-icon">✓</span><span>Designed for Sri Lankan delivery teams</span></div>
+      <div class="login-point">
+        <span class="point-icon">✓</span>
+        <span>One connected logistics platform</span>
+      </div>
+      <div class="login-point">
+        <span class="point-icon">✓</span>
+        <span>Parcel status and delivery updates</span>
+      </div>
+      <div class="login-point">
+        <span class="point-icon">✓</span>
+        <span>Role-based workspace access</span>
+      </div>
+      <div class="login-point">
+        <span class="point-icon">✓</span>
+        <span>Designed for Sri Lankan delivery teams</span>
+      </div>
     </div>
   </section>
 
@@ -97,7 +115,14 @@ function h($value) {
       <input type="hidden" name="portal" value="<?= h($portal) ?>">
       <div class="form-row">
         <label for="identity"><?= h($page['emailLabel']) ?></label>
-        <input id="identity" name="identity" type="text" placeholder="<?= h($page['emailPlaceholder']) ?>" autocomplete="username" required>
+        <input
+          id="identity"
+          name="identity"
+          type="text"
+          placeholder="<?= h($page['emailPlaceholder']) ?>"
+          autocomplete="username"
+          required
+        >
       </div>
 
       <?php if ($portal === 'staff'): ?>
@@ -115,13 +140,29 @@ function h($value) {
       <div class="form-row">
         <label for="password">Password</label>
         <div class="password-wrap">
-          <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
-          <button class="password-toggle" id="togglePassword" type="button" aria-controls="password" aria-pressed="false">Show</button>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+          <button
+            class="password-toggle"
+            id="togglePassword"
+            type="button"
+            aria-controls="password"
+            aria-pressed="false"
+          >Show</button>
         </div>
       </div>
 
       <div class="form-options">
-        <label class="remember"><input type="checkbox" name="remember" value="1"> Remember me</label>
+        <label class="remember">
+          <input type="checkbox" name="remember" value="1">
+          Remember me
+        </label>
         <a class="text-link" href="forgot_password.php">Forgot password?</a>
       </div>
 
@@ -131,18 +172,26 @@ function h($value) {
 
     <?php if ($portal === 'customer'): ?>
     <div class="login-divider">NEW TO HELMS?</div>
-    <p class="login-bottom">Need a customer account? <a class="text-link" href="register.php?type=individual">Create an account</a></p>
+    <p class="login-bottom">
+      Need a customer account?
+      <a class="text-link" href="register.php?type=individual">Create an account</a>
+    </p>
     <?php elseif ($portal === 'staff'): ?>
     <div class="staff-note">Staff accounts are created by an authorized system administrator. If you need access, contact your supervisor or system administrator.</div>
     <?php else: ?>
-    <div class="staff-note" style="margin-top:22px">Driver accounts are provisioned by the company. If you cannot sign in, contact your transport supervisor.</div>
+    <div class="staff-note" style="margin-top:22px">
+      Driver accounts are provisioned by the company. If you cannot sign in, contact your transport supervisor.
+    </div>
     <?php endif; ?>
   </section>
 </main>
 
 <footer class="login-footer">
   <span>&copy; <?= date('Y') ?> Henowic Inventors (Pvt) Ltd.</span>
-  <span><a href="index.php">Return to HELMS home</a> &middot; NIBM DSE Final Project</span>
+  <span>
+    <a href="index.php">Return to HELMS home</a>
+    &middot; NIBM DSE Final Project
+  </span>
 </footer>
 <script>
 (function () {

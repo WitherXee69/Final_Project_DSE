@@ -34,14 +34,14 @@ $staffRoles = [
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HELMS | Henowic Inventors Logistics</title>
-<meta name="description" content="Henowic Enterprise Logistics Management System - request pickups, track parcels and manage logistics operations.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELMS | Henowic Inventors Logistics</title>
+  <meta name="description" content="Henowic Enterprise Logistics Management System - request pickups, track parcels and manage logistics operations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -56,10 +56,15 @@ $staffRoles = [
   <div class="container nav">
     <a href="index.php" class="brand">
       <div class="logo">H</div>
-      <div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div>
+      <div>
+        <b>HELMS</b>
+        <small>Henowic Inventors (Pvt) Ltd.</small>
+      </div>
     </a>
     <button class="burger" id="burger" aria-label="Menu">
-      <svg class="i" viewBox="0 0 24 24" style="width:28px;height:28px"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="i" viewBox="0 0 24 24" style="width:28px;height:28px">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
     </button>
     <nav class="menu" id="menu">
       <a class="link" href="#portals">Portals</a>
@@ -104,10 +109,38 @@ $staffRoles = [
         <button class="btn btn-primary" type="submit">Track</button>
       </form>
       <div class="steps">
-        <div class="step done"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12l5 5 9-10"/></svg></div>Picked up</div>
-        <div class="step done"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12l5 5 9-10"/></svg></div>In warehouse</div>
-        <div class="step now"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/></svg></div>Out for delivery</div>
-        <div class="step"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/></svg></div>Delivered</div>
+        <div class="step done">
+          <div class="dot">
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
+              <path d="M5 12l5 5 9-10"/>
+            </svg>
+          </div>
+          Picked up
+        </div>
+        <div class="step done">
+          <div class="dot">
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
+              <path d="M5 12l5 5 9-10"/>
+            </svg>
+          </div>
+          In warehouse
+        </div>
+        <div class="step now">
+          <div class="dot">
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
+              <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
+            </svg>
+          </div>
+          Out for delivery
+        </div>
+        <div class="step">
+          <div class="dot">
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
+              <path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/>
+            </svg>
+          </div>
+          Delivered
+        </div>
       </div>
     </div>
   </div>
@@ -119,13 +152,27 @@ $staffRoles = [
 
     <!-- Customers -->
     <article class="portal">
-      <div class="ico c1"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="ico c1">
+        <svg class="i" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
       <h3>Customers</h3>
       <p>Individual and corporate customers.</p>
       <ul>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Request and manage pickups &amp; deliveries</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Track delivery status in real time</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Corporate users can view agreements</li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Request and manage pickups &amp; deliveries
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Track delivery status in real time
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Corporate users can view agreements
+        </li>
       </ul>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=customer">Login</a>
@@ -135,11 +182,18 @@ $staffRoles = [
 
     <!-- Staff -->
     <article class="portal">
-      <div class="ico c2"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"/></svg></div>
+      <div class="ico c2">
+        <svg class="i" viewBox="0 0 24 24">
+          <rect x="3" y="7" width="18" height="13" rx="2"/>
+          <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"/>
+        </svg>
+      </div>
       <h3>Staff &amp; Management</h3>
       <p>Secure access for Henowic employees.</p>
       <div class="chips">
-        <?php foreach ($staffRoles as $r): ?><span><?= htmlspecialchars($r) ?></span><?php endforeach; ?>
+        <?php foreach ($staffRoles as $r): ?>
+          <span><?= htmlspecialchars($r) ?></span>
+        <?php endforeach; ?>
       </div>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=staff">Staff Login</a>
@@ -148,13 +202,28 @@ $staffRoles = [
 
     <!-- Drivers -->
     <article class="portal">
-      <div class="ico c3"><svg class="i" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></div>
+      <div class="ico c3">
+        <svg class="i" viewBox="0 0 24 24">
+          <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
+          <circle cx="7" cy="18" r="1.6"/>
+          <circle cx="17" cy="18" r="1.6"/>
+        </svg>
+      </div>
       <h3>Drivers</h3>
       <p>Your daily work, simplified.</p>
       <ul>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>View assigned manifests &amp; parcels</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Update delivery &amp; pickup status</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Record COD payments &amp; availability</li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          View assigned manifests &amp; parcels
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Update delivery &amp; pickup status
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Record COD payments &amp; availability
+        </li>
       </ul>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=driver">Driver Login</a>
@@ -192,11 +261,26 @@ $staffRoles = [
       <h2>Five simple steps from booking to doorstep</h2>
     </div>
     <div class="flow">
-      <div class="f"><h4>Book</h4><p>Register and create a pickup or delivery request.</p></div>
-      <div class="f"><h4>Collect</h4><p>A driver and vehicle are assigned to pick up your parcel.</p></div>
-      <div class="f"><h4>Store</h4><p>Parcel is received and located in our Colombo warehouse.</p></div>
-      <div class="f"><h4>Deliver</h4><p>Dispatched via a delivery manifest to the receiver.</p></div>
-      <div class="f"><h4>Pay &amp; Receipt</h4><p>Invoices, COD and receipts are recorded automatically.</p></div>
+      <div class="f">
+        <h4>Book</h4>
+        <p>Register and create a pickup or delivery request.</p>
+      </div>
+      <div class="f">
+        <h4>Collect</h4>
+        <p>A driver and vehicle are assigned to pick up your parcel.</p>
+      </div>
+      <div class="f">
+        <h4>Store</h4>
+        <p>Parcel is received and located in our Colombo warehouse.</p>
+      </div>
+      <div class="f">
+        <h4>Deliver</h4>
+        <p>Dispatched via a delivery manifest to the receiver.</p>
+      </div>
+      <div class="f">
+        <h4>Pay &amp; Receipt</h4>
+        <p>Invoices, COD and receipts are recorded automatically.</p>
+      </div>
     </div>
 
     <div class="band" style="margin-top:64px">
@@ -221,7 +305,13 @@ $staffRoles = [
   <div class="container">
     <div class="f-grid">
       <div>
-        <div class="brand" style="margin-bottom:14px"><div class="logo">H</div><div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div></div>
+        <div class="brand" style="margin-bottom:14px">
+          <div class="logo">H</div>
+          <div>
+            <b>HELMS</b>
+            <small>Henowic Inventors (Pvt) Ltd.</small>
+          </div>
+        </div>
         <p style="font-size:.88rem">Reliable, organized domestic parcel delivery across Sri Lanka.</p>
       </div>
       <div>
