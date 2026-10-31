@@ -1,14 +1,13 @@
+
 <?php
 
 require_once __DIR__ . '/layout.php';
 
-// Get dummy data from layout.php
 $driver = dr_driver();
 $manifests = dr_manifests();
 $pickups = dr_pickups();
 $deliveries = dr_deliveries();
 
-// Calculate dashboard statistics
 $totalManifests = count($manifests);
 $totalPickups = count($pickups);
 $totalDeliveries = count($deliveries);
@@ -16,20 +15,18 @@ $totalDeliveries = count($deliveries);
 $completedDeliveries = 0;
 
 foreach ($deliveries as $delivery) {
-    $status = strtolower($delivery['status'] ?? '');
-
-    if ($status === 'delivered' || $status === 'completed') {
+    if (strtolower($delivery['status']) === 'delivered') {
         $completedDeliveries++;
     }
 }
 
-// Escape output safely
+$pendingDeliveries = $totalDeliveries - $completedDeliveries;
+
 function driver_h($value)
 {
     return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
-// Generate a CSS class for each status
 function driver_status_class($status)
 {
     $status = strtolower(trim((string) $status));
@@ -38,393 +35,491 @@ function driver_status_class($status)
     return 'status-' . trim($status, '-');
 }
 
-// Display the shared layout
+$flash = dr_get_flash();
+
 dr_header('Driver Dashboard', 'dashboard');
 
 ?>
 
-<!-- Welcome Section -->
+<!-- FLASH MESSAGE -->
+
+<?php if ($flash): ?>
+
+    <div class="driver-action-message <?= driver_h($flash['type']); ?>">
+        <?= driver_h($flash['message']); ?>
+    </div>
+
+<?php endif; ?>
+
+
+<!-- WELCOME -->
+
 <section class="driver-welcome">
 
-    <div class="driver-welcome-content">
-        <p class="driver-eyebrow">DRIVER PORTAL</p>
+    <div>
+        <span class="driver-eyebrow">DRIVER WORKSPACE</span>
 
         <h1>
-            Welcome back,
-            <?= driver_h($driver['fullName']); ?>!
+            Good day, <?= driver_h($driver['fullName']); ?>.
         </h1>
 
         <p>
-            Here's an overview of your assigned manifests,
+            Here is an overview of your assigned manifests,
             pickups and deliveries.
         </p>
     </div>
 
-    <div class="driver-welcome-date">
-        <span>Today's Date</span>
-        <strong><?= date('d M Y'); ?></strong>
+    <div class="driver-status">
+        <span class="status-indicator"></span>
+        <span>Driver status:</span>
+        <strong><?= driver_h($driver['status']); ?></strong>
     </div>
 
 </section>
 
 
-<!-- Driver Profile -->
-<section class="driver-profile-strip">
+<!-- AVAILABILITY -->
 
-    <div class="driver-profile-avatar">
-        <?= strtoupper(substr($driver['fullName'] ?? 'D', 0, 1)); ?>
-    </div>
+<section class="driver-availability-card">
 
-    <div class="driver-profile-details">
-        <h2><?= driver_h($driver['fullName']); ?></h2>
+    <div>
+        <h2>Update your availability</h2>
 
         <p>
-            Driver ID:
-            <strong><?= driver_h($driver['driverId']); ?></strong>
+            Let the transport manager know whether you are available for assignments.
         </p>
     </div>
 
-    <div class="driver-profile-info">
-        <span>Licence Number</span>
+    <form class="driver-availability-form"
+          method="POST"
+          action="driver_actions_dummy.php">
+
+        <input type="hidden" name="action" value="updateAvailability">
+
+        <select name="availability" required>
+            <option value="Available"
+                <?= $driver['status'] === 'Available' ? 'selected' : ''; ?>>
+                Available
+            </option>
+
+            <option value="Unavailable"
+                <?= $driver['status'] === 'Unavailable' ? 'selected' : ''; ?>>
+                Unavailable
+            </option>
+        </select>
+
+        <button type="submit" class="driver-action-button driver-action-primary">
+            Update availability
+        </button>
+
+    </form>
+
+</section>
+
+
+<!-- DRIVER PROFILE -->
+
+<section class="driver-profile-strip">
+
+    <div>
+        <span class="profile-label">Driver ID</span>
+        <strong><?= driver_h($driver['driverId']); ?></strong>
+    </div>
+
+    <div>
+        <span class="profile-label">License number</span>
         <strong><?= driver_h($driver['licenseNumber']); ?></strong>
     </div>
 
-    <div class="driver-profile-info">
-        <span>Contact Number</span>
+    <div>
+        <span class="profile-label">Contact number</span>
         <strong><?= driver_h($driver['contactNumber']); ?></strong>
     </div>
 
-    <div class="driver-profile-info">
-        <span>Assigned Vehicle</span>
-        <strong><?= driver_h($driver['vehicle']); ?></strong>
-    </div>
-
-    <div class="driver-profile-status">
-        <span class="driver-status-label">Availability</span>
-
-        <span class="status-pill <?= driver_status_class($driver['status']); ?>">
-            <?= driver_h($driver['status']); ?>
-        </span>
-    </div>
-
 </section>
 
 
-<!-- Dashboard Statistics -->
+<!-- SUMMARY CARDS -->
+
 <section class="driver-stats">
 
-    <div class="driver-stat-card">
-        <div class="driver-stat-icon icon-manifests">
-            <span>▤</span>
+    <article class="driver-stat-card">
+        <div class="stat-icon navy-icon">▤</div>
+
+        <div>
+            <span>Total manifests</span>
+            <strong><?= $totalManifests; ?></strong>
+            <small>Assigned to you</small>
         </div>
+    </article>
 
-        <div class="driver-stat-content">
-            <p>Total Manifests</p>
-            <h2><?= $totalManifests; ?></h2>
-            <span>Assigned to you</span>
+    <article class="driver-stat-card">
+        <div class="stat-icon amber-icon">↗</div>
+
+        <div>
+            <span>Pickup assignments</span>
+            <strong><?= $totalPickups; ?></strong>
+            <small>Across your manifests</small>
         </div>
-    </div>
+    </article>
 
+    <article class="driver-stat-card">
+        <div class="stat-icon blue-icon">▣</div>
 
-    <div class="driver-stat-card">
-        <div class="driver-stat-icon icon-pickups">
-            <span>↗</span>
+        <div>
+            <span>Total deliveries</span>
+            <strong><?= $totalDeliveries; ?></strong>
+            <small>Assigned to you</small>
         </div>
+    </article>
 
-        <div class="driver-stat-content">
-            <p>Pickup Assignments</p>
-            <h2><?= $totalPickups; ?></h2>
-            <span>Assigned pickups</span>
+    <article class="driver-stat-card">
+        <div class="stat-icon green-icon">✓</div>
+
+        <div>
+            <span>Completed deliveries</span>
+            <strong><?= $completedDeliveries; ?></strong>
+            <small><?= $pendingDeliveries; ?> not marked delivered</small>
         </div>
-    </div>
-
-
-    <div class="driver-stat-card">
-        <div class="driver-stat-icon icon-deliveries">
-            <span>▣</span>
-        </div>
-
-        <div class="driver-stat-content">
-            <p>Total Deliveries</p>
-            <h2><?= $totalDeliveries; ?></h2>
-            <span>Assigned deliveries</span>
-        </div>
-    </div>
-
-
-    <div class="driver-stat-card">
-        <div class="driver-stat-icon icon-completed">
-            <span>✓</span>
-        </div>
-
-        <div class="driver-stat-content">
-            <p>Completed Deliveries</p>
-            <h2><?= $completedDeliveries; ?></h2>
-            <span>Successfully delivered</span>
-        </div>
-    </div>
+    </article>
 
 </section>
 
 
-<!-- My Manifests -->
+<!-- MANIFESTS -->
+
 <section class="driver-section" id="manifests">
 
     <div class="driver-section-heading">
         <div>
-            <h2>My Manifests</h2>
-            <p>Delivery manifests assigned to you.</p>
+            <span class="section-kicker">YOUR ASSIGNMENTS</span>
+            <h2>My manifests</h2>
         </div>
 
-        <span class="driver-section-count">
-            <?= $totalManifests; ?> Manifests
+        <span class="section-count">
+            <?= $totalManifests; ?> shown
         </span>
     </div>
 
+    <?php if (!empty($manifests)): ?>
 
-    <div class="driver-table-wrap">
+        <div class="driver-table-wrap">
 
-        <table class="driver-table">
+            <table class="driver-table">
 
-            <thead>
-                <tr>
-                    <th>Manifest ID</th>
-                    <th>Assigned Date</th>
-                    <th>Schedule</th>
-                    <th>Route</th>
-                    <th>Vehicle</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Manifest</th>
+                        <th>Assigned date</th>
+                        <th>Route</th>
+                        <th>Vehicle</th>
+                        <th>Schedule</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-
-                <?php if (!empty($manifests)): ?>
+                <tbody>
 
                     <?php foreach ($manifests as $manifest): ?>
 
                         <tr>
-                            <td class="table-primary-text">
-                                <?= driver_h($manifest['id']); ?>
-                            </td>
 
                             <td>
-                                <?= driver_h($manifest['date']); ?>
+                                <strong><?= driver_h($manifest['id']); ?></strong>
                             </td>
 
-                            <td>
-                                <?= driver_h($manifest['schedule']); ?>
-                            </td>
+                            <td><?= driver_h($manifest['date']); ?></td>
 
-                            <td>
-                                <?= driver_h($manifest['route']); ?>
-                            </td>
+                            <td><?= driver_h($manifest['route']); ?></td>
 
-                            <td>
-                                <?= driver_h($manifest['vehicle']); ?>
-                            </td>
+                            <td><?= driver_h($manifest['vehicle']); ?></td>
+
+                            <td><?= driver_h($manifest['schedule']); ?></td>
 
                             <td>
                                 <span class="status-pill <?= driver_status_class($manifest['status']); ?>">
                                     <?= driver_h($manifest['status']); ?>
                                 </span>
                             </td>
+
                         </tr>
 
                     <?php endforeach; ?>
 
-                <?php else: ?>
+                </tbody>
 
-                    <tr>
-                        <td colspan="6" class="driver-empty-state">
-                            No manifests have been assigned to you.
-                        </td>
-                    </tr>
+            </table>
 
-                <?php endif; ?>
+        </div>
 
-            </tbody>
+    <?php else: ?>
 
-        </table>
+        <div class="driver-empty">
+            <strong>No manifests assigned yet</strong>
+        </div>
 
-    </div>
+    <?php endif; ?>
 
 </section>
 
 
-<!-- Assigned Pickups -->
+<!-- PICKUPS -->
+
 <section class="driver-section" id="pickups">
 
     <div class="driver-section-heading">
         <div>
-            <h2>Assigned Pickups</h2>
-            <p>Pickup requests assigned to you.</p>
+            <span class="section-kicker">COLLECTIONS</span>
+            <h2>Assigned pickups</h2>
         </div>
 
-        <span class="driver-section-count">
-            <?= $totalPickups; ?> Pickups
+        <span class="section-count">
+            <?= $totalPickups; ?> shown
         </span>
     </div>
 
+    <?php if (!empty($pickups)): ?>
 
-    <div class="driver-table-wrap">
+        <div class="driver-table-wrap">
 
-        <table class="driver-table">
+            <table class="driver-table">
 
-            <thead>
-                <tr>
-                    <th>Pickup ID</th>
-                    <th>Pickup Date</th>
-                    <th>Preferred Time</th>
-                    <th>Pickup Address</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Pickup ID</th>
+                        <th>Pickup date</th>
+                        <th>Time window</th>
+                        <th>Collection address</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-
-                <?php if (!empty($pickups)): ?>
+                <tbody>
 
                     <?php foreach ($pickups as $pickup): ?>
 
                         <tr>
-                            <td class="table-primary-text">
-                                <?= driver_h($pickup['id']); ?>
-                            </td>
 
                             <td>
-                                <?= driver_h($pickup['date']); ?>
+                                <strong><?= driver_h($pickup['id']); ?></strong>
                             </td>
 
-                            <td>
-                                <?= driver_h($pickup['time']); ?>
-                            </td>
+                            <td><?= driver_h($pickup['date']); ?></td>
 
-                            <td class="table-address">
-                                <?= driver_h($pickup['address']); ?>
-                            </td>
+                            <td><?= driver_h($pickup['time']); ?></td>
+
+                            <td><?= driver_h($pickup['address']); ?></td>
 
                             <td>
                                 <span class="status-pill <?= driver_status_class($pickup['status']); ?>">
                                     <?= driver_h($pickup['status']); ?>
                                 </span>
+
+                                <?php if (!empty($pickup['failureReason'])): ?>
+                                    <small class="table-subtext">
+                                        Reason: <?= driver_h($pickup['failureReason']); ?>
+                                    </small>
+                                <?php endif; ?>
                             </td>
+
+                            <td>
+
+                                <?php if (!in_array($pickup['status'], ['Completed', 'Failed'], true)): ?>
+
+                                    <div class="driver-action-group">
+
+                                        <form method="POST" action="driver_actions_dummy.php">
+
+                                            <input type="hidden" name="action" value="markPickupSuccessful">
+                                            <input type="hidden" name="id" value="<?= driver_h($pickup['id']); ?>">
+
+                                            <button type="submit"
+                                                    class="driver-action-button driver-action-success">
+                                                Mark successful
+                                            </button>
+
+                                        </form>
+
+                                        <form method="POST"
+                                              action="driver_actions_dummy.php"
+                                              class="driver-failed-form">
+
+                                            <input type="hidden" name="action" value="markPickupFailed">
+                                            <input type="hidden" name="id" value="<?= driver_h($pickup['id']); ?>">
+
+                                            <input type="text"
+                                                   name="failureReason"
+                                                   placeholder="Failure reason"
+                                                   maxlength="255"
+                                                   required>
+
+                                            <button type="submit"
+                                                    class="driver-action-button driver-action-danger">
+                                                Failed
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                <?php else: ?>
+
+                                    <span class="action-complete">
+                                        Processed
+                                    </span>
+
+                                <?php endif; ?>
+
+                            </td>
+
                         </tr>
 
                     <?php endforeach; ?>
 
-                <?php else: ?>
+                </tbody>
 
-                    <tr>
-                        <td colspan="5" class="driver-empty-state">
-                            No pickups have been assigned to you.
-                        </td>
-                    </tr>
+            </table>
 
-                <?php endif; ?>
+        </div>
 
-            </tbody>
+    <?php else: ?>
 
-        </table>
+        <div class="driver-empty">
+            <strong>No pickup assignments</strong>
+            <p>Pickups assigned to your manifests will appear here.</p>
+        </div>
 
-    </div>
+    <?php endif; ?>
 
 </section>
 
 
-<!-- Assigned Deliveries -->
+<!-- DELIVERIES -->
+
 <section class="driver-section" id="deliveries">
 
     <div class="driver-section-heading">
         <div>
-            <h2>Assigned Deliveries</h2>
-            <p>Deliveries assigned to you.</p>
+            <span class="section-kicker">DELIVERY WORK</span>
+            <h2>Assigned deliveries</h2>
         </div>
 
-        <span class="driver-section-count">
-            <?= $totalDeliveries; ?> Deliveries
+        <span class="section-count">
+            <?= $totalDeliveries; ?> shown
         </span>
     </div>
 
+    <?php if (!empty($deliveries)): ?>
 
-    <div class="driver-table-wrap">
+        <div class="driver-table-wrap">
 
-        <table class="driver-table">
+            <table class="driver-table">
 
-            <thead>
-                <tr>
-                    <th>Delivery ID</th>
-                    <th>Parcel ID</th>
-                    <th>Delivery Date</th>
-                    <th>Delivery Address</th>
-                    <th>Receiver</th>
-                    <th>Contact Number</th>
-                    <th>Attempts</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Delivery</th>
+                        <th>Parcel</th>
+                        <th>Receiver</th>
+                        <th>Delivery address</th>
+                        <th>Date</th>
+                        <th>Attempts</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-
-                <?php if (!empty($deliveries)): ?>
+                <tbody>
 
                     <?php foreach ($deliveries as $delivery): ?>
 
                         <tr>
-                            <td class="table-primary-text">
-                                <?= driver_h($delivery['id']); ?>
-                            </td>
 
                             <td>
-                                <?= driver_h($delivery['parcelId']); ?>
+                                <strong><?= driver_h($delivery['id']); ?></strong>
                             </td>
+
+                            <td><?= driver_h($delivery['parcelId']); ?></td>
 
                             <td>
-                                <?= driver_h($delivery['date']); ?>
+                                <strong><?= driver_h($delivery['receiver']); ?></strong>
+
+                                <small class="table-subtext">
+                                    <?= driver_h($delivery['phone']); ?>
+                                </small>
                             </td>
 
-                            <td class="table-address">
-                                <?= driver_h($delivery['address']); ?>
-                            </td>
+                            <td><?= driver_h($delivery['address']); ?></td>
 
-                            <td>
-                                <?= driver_h($delivery['receiver']); ?>
-                            </td>
+                            <td><?= driver_h($delivery['date']); ?></td>
 
-                            <td>
-                                <?= driver_h($delivery['phone']); ?>
-                            </td>
-
-                            <td>
-                                <?= driver_h($delivery['attempts']); ?>
-                            </td>
+                            <td><?= (int) $delivery['attempts']; ?></td>
 
                             <td>
                                 <span class="status-pill <?= driver_status_class($delivery['status']); ?>">
                                     <?= driver_h($delivery['status']); ?>
                                 </span>
                             </td>
+
+                            <td>
+
+                                <?php if ($delivery['status'] === 'Delivered'): ?>
+
+                                    <span class="action-complete">
+                                        Delivered
+                                    </span>
+
+                                <?php elseif ($delivery['status'] === 'Arrived'): ?>
+
+                                    <a href="delivery_pin_dummy.php?id=<?= urlencode($delivery['id']); ?>"
+                                       class="driver-action-button driver-action-primary">
+                                        Submit PIN
+                                    </a>
+
+                                <?php else: ?>
+
+                                    <form method="POST" action="driver_actions_dummy.php">
+
+                                        <input type="hidden" name="action" value="markDeliveryArrived">
+                                        <input type="hidden" name="id" value="<?= driver_h($delivery['id']); ?>">
+
+                                        <button type="submit"
+                                                class="driver-action-button driver-action-primary">
+                                            Mark arrived
+                                        </button>
+
+                                    </form>
+
+                                <?php endif; ?>
+
+                            </td>
+
                         </tr>
 
                     <?php endforeach; ?>
 
-                <?php else: ?>
+                </tbody>
 
-                    <tr>
-                        <td colspan="8" class="driver-empty-state">
-                            No deliveries have been assigned to you.
-                        </td>
-                    </tr>
+            </table>
 
-                <?php endif; ?>
+        </div>
 
-            </tbody>
+    <?php else: ?>
 
-        </table>
+        <div class="driver-empty">
+            <strong>No delivery assignments</strong>
+            <p>Deliveries assigned to your manifests will appear here.</p>
+        </div>
 
-    </div>
+    <?php endif; ?>
 
 </section>
+
+
+<p class="driver-footnote">
+    This is a demonstration dashboard. Actions update temporary session data
+    and do not modify the HELMS database.
+</p>
 
 
 <?php
