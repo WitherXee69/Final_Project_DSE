@@ -1,6 +1,5 @@
 <?php
 // HELMS Warehouse module - shared layout and temporary demo data.
-// Replace the session store with the project's MySQL/PDO layer when the schema is connected.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -8,6 +7,50 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 function wh_h($value)
 {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+function wh_status_options()
+{
+    return [
+        'PENDING_PICKUP' => 'Pending Pickup',
+        'RECEIVED_AT_WAREHOUSE' => 'Received at Warehouse',
+        'DETAILS_CONFIRMED' => 'Details Confirmed',
+        'PACKED' => 'Packed',
+        'AWAITING_PAYMENT' => 'Awaiting Payment',
+        'READY_FOR_DISPATCH' => 'Ready for Dispatch',
+        'OUT_FOR_DELIVERY' => 'Out for Delivery',
+        'DELIVERED' => 'Delivered',
+        'RETURNED_TO_WAREHOUSE' => 'Returned to Warehouse',
+        'RETURN_TO_SENDER' => 'Return to Sender',
+        'UNCLAIMED' => 'Unclaimed',
+        'RELEASED_TO_SENDER' => 'Released to Sender',
+    ];
+}
+
+function wh_normalize_status($status)
+{
+    $legacy = [
+        'Pending Confirmation' => 'RECEIVED_AT_WAREHOUSE',
+        'Received at Warehouse' => 'RECEIVED_AT_WAREHOUSE',
+        'Stored' => 'DETAILS_CONFIRMED',
+        'Packed' => 'PACKED',
+        'Released to Sender' => 'RELEASED_TO_SENDER',
+    ];
+    if (isset($legacy[$status])) {
+        return $legacy[$status];
+    }
+    $status = strtoupper(trim((string)$status));
+    return isset(wh_status_options()[$status]) ? $status : $status;
+}
+
+function wh_status_label($status)
+{
+    $normalized = wh_normalize_status($status);
+    $options = wh_status_options();
+    if (isset($options[$normalized])) {
+        return $options[$normalized];
+    }
+    return ucwords(str_replace('_', ' ', strtolower((string)$status)));
 }
 
 function wh_seed()
@@ -27,7 +70,7 @@ function wh_seed()
                 'detailsConfirmed' => true,
                 'parcelReceivedDate' => date('Y-m-d'),
                 'storageLocationCode' => 'A-01-03',
-                'status' => 'Received at Warehouse',
+                'status' => 'RECEIVED_AT_WAREHOUSE',
                 'holdExpiresAt' => '',
                 'failureReason' => '',
             ],
@@ -44,7 +87,7 @@ function wh_seed()
                 'detailsConfirmed' => true,
                 'parcelReceivedDate' => date('Y-m-d'),
                 'storageLocationCode' => 'B-02-01',
-                'status' => 'Packed',
+                'status' => 'PACKED',
                 'holdExpiresAt' => '',
                 'failureReason' => '',
             ],
@@ -61,7 +104,7 @@ function wh_seed()
                 'detailsConfirmed' => false,
                 'parcelReceivedDate' => date('Y-m-d'),
                 'storageLocationCode' => '',
-                'status' => 'Pending Confirmation',
+                'status' => 'RECEIVED_AT_WAREHOUSE',
                 'holdExpiresAt' => '',
                 'failureReason' => '',
             ],
@@ -101,17 +144,16 @@ function wh_save($parcel)
 
 function wh_status_class($status)
 {
-    $s = strtolower($status);
-    if (strpos($s, 'packed') !== false || strpos($s, 'released') !== false) {
+    $s = wh_normalize_status($status);
+    if (in_array($s, ['PACKED', 'READY_FOR_DISPATCH', 'DELIVERED', 'RELEASED_TO_SENDER'], true)) {
         return 'good';
     }
-    if (strpos($s, 'pending') !== false || strpos($s, 'await') !== false) {
+    if (in_array($s, ['PENDING_PICKUP', 'RECEIVED_AT_WAREHOUSE', 'AWAITING_PAYMENT'], true)) {
         return 'warning';
     }
-    if (strpos($s, 'failed') !== false || strpos($s, 'unclaimed') !== false) {
+    if (in_array($s, ['UNCLAIMED', 'RETURN_TO_SENDER'], true)) {
         return 'danger';
     }
-
     return 'info';
 }
 
@@ -155,21 +197,14 @@ function wh_header($title, $active = 'dashboard')
                 <?php if ($isManager): ?>
                     <a class="<?= $active === 'report' ? 'active' : '' ?>" href="report.php">Storage report</a>
                 <?php endif; ?>
-                <div class="wh-side-bottom">
-                    <a href="../index.php">← Back to HELMS home</a>
-                </div>
+                <div class="wh-side-bottom"><a href="../index.php">← Back to HELMS home</a></div>
             </aside>
             <main class="wh-main">
                 <div class="wh-page-head">
-                    <div>
-                        <span class="wh-eyebrow">HELMS / WAREHOUSE</span>
-                        <h1><?= wh_h($title) ?></h1>
-                    </div>
+                    <div><span class="wh-eyebrow">HELMS / WAREHOUSE</span><h1><?= wh_h($title) ?></h1></div>
                     <span class="wh-role-pill"><?= wh_h($role) ?></span>
                 </div>
-                <div class="wh-demo-notice">
-                    <strong>Prototype mode:</strong> this module currently uses temporary PHP session data for demonstration. It is not connected to MySQL yet; changes reset when the session ends.
-                </div>
+                <div class="wh-demo-notice"><strong>Prototype mode:</strong> this module still uses temporary PHP session data. Database integration will follow.</div>
     <?php
 }
 
@@ -180,5 +215,5 @@ function wh_footer()
         </div>
     </body>
     </html>
-<?php
+    <?php
 }

@@ -50,3 +50,8 @@
 .wh-empty{padding:28px;text-align:center;color:#64748b;font-size:.86rem}
 @media(max-width:1000px){.wh-grid{grid-template-columns:repeat(2,1fr)}.wh-shell{grid-template-columns:190px minmax(0,1fr)}.wh-detail-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.wh-shell{display:block}.wh-sidebar{min-height:0;display:grid;grid-template-columns:repeat(2,1fr);margin-bottom:18px}.wh-side-label,.wh-side-bottom{grid-column:1/-1}.wh-grid{grid-template-columns:repeat(2,1fr)}.wh-page-head{align-items:flex-start;flex-direction:column}.wh-form,.wh-detail-grid{grid-template-columns:1fr}.wh-field.full,.wh-form-actions{grid-column:auto}.wh-user{display:none}}
+/* UI update: status filtering and form controls */
+.wh-search select{min-width:230px;border:1.5px solid #dce3ec;border-radius:10px;padding:11px 12px;font:inherit;font-size:.85rem;background:#fff;color:#172033}
+.wh-filter-form{align-items:center}
+.wh-form select{cursor:pointer}
+.wh-error{color:#b91c1c;margin-bottom:12px;font-size:.85rem}
