@@ -1,11 +1,33 @@
 <?php
 require_once __DIR__ . '/_layout.php';
+require_once '../config/database.php';
+
+// Get parcel count
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM Parcel;');
+$stmt->execute();
+$totalParcels = $stmt->fetchColumn();
+
+// Get Werehouse count
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM Warehouse;');
+$stmt->execute();
+$totalWarehouses = $stmt->fetchColumn();
+
+// Get stored parcels count
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM Parcel WHERE status = "RECEIVED_AT_WAREHOUSE";');
+$stmt->execute();
+$totalStoredParcels = $stmt->fetchColumn();
+
+// Get packed parcels count
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM Parcel WHERE status = "PACKED";');
+$stmt->execute();
+$totalPackedParcels = $stmt->fetchColumn();
+
+// Get pending parcels count
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM Parcel WHERE detailsConfirmed = FALSE;');
+$stmt->execute();
+$totalPendingParcels = $stmt->fetchColumn();
 
 $parcels = wh_parcels();
-$total = count($parcels);
-$pending = count(array_filter($parcels, fn($p) => !$p['detailsConfirmed']));
-$packed = count(array_filter($parcels, fn($p) => $p['status'] === 'Packed'));
-$stored = count(array_filter($parcels, fn($p) => !empty($p['storageLocationCode'])));
 $w = $_SESSION['wh_warehouse'];
 $percent = $w['capacity'] ? min(100, round(($w['currentLoad'] / $w['capacity']) * 100)) : 0;
 wh_header('Warehouse overview', 'dashboard');
@@ -14,22 +36,22 @@ wh_header('Warehouse overview', 'dashboard');
 <div class="wh-grid">
     <div class="wh-card">
         <div class="wh-stat-label">Parcels in register</div>
-        <div class="wh-stat-value"><?= $total ?></div>
+        <div class="wh-stat-value"><?= $totalParcels ?></div>
         <div class="wh-stat-foot">Current demo records</div>
     </div>
     <div class="wh-card">
         <div class="wh-stat-label">Awaiting confirmation</div>
-        <div class="wh-stat-value"><?= $pending ?></div>
+        <div class="wh-stat-value"><?= $totalPendingParcels ?></div>
         <div class="wh-stat-foot">Details need checking</div>
     </div>
     <div class="wh-card">
         <div class="wh-stat-label">Packed parcels</div>
-        <div class="wh-stat-value"><?= $packed ?></div>
+        <div class="wh-stat-value"><?= $totalPackedParcels ?></div>
         <div class="wh-stat-foot">Ready for next handling step</div>
     </div>
     <div class="wh-card">
         <div class="wh-stat-label">Assigned storage</div>
-        <div class="wh-stat-value"><?= $stored ?></div>
+        <div class="wh-stat-value"><?= $totalStoredParcels ?></div>
         <div class="wh-stat-foot">Parcels with a location code</div>
     </div>
 </div>
