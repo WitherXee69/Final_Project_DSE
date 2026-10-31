@@ -1,0 +1,638 @@
+/* =========================================
+   DRIVER DASHBOARD
+   Uses the HELMS homepage design system
+========================================= */
+
+.driver-body {
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+}
+
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.driver-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(11, 31, 58, 0.97);
+    backdrop-filter: blur(8px);
+}
+
+.driver-menu {
+    display: flex !important;
+    align-items: center;
+    gap: 24px;
+}
+
+.driver-menu a.link {
+    color: #c9d6ea;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.driver-menu a.link:hover,
+.driver-menu a.link.active {
+    color: var(--amber);
+}
+
+.driver-menu .driver-logout {
+    color: var(--navy);
+    border: none;
+}
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
+.driver-main {
+    min-height: calc(100vh - 160px);
+    padding-top: 38px;
+    padding-bottom: 55px;
+}
+
+.driver-page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.driver-page-label {
+    display: inline-block;
+    margin-bottom: 7px;
+    color: var(--amber-d);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.driver-page-heading h1 {
+    color: var(--navy);
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.driver-date {
+    padding: 9px 15px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: #fff;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   PROTOTYPE NOTICE
+========================================= */
+
+.driver-demo-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 17px;
+    margin-bottom: 24px;
+    border: 1px solid #ffe0ad;
+    border-radius: 12px;
+    background: #fff8eb;
+    color: #704700;
+    font-size: 0.84rem;
+}
+
+.driver-demo-notice strong {
+    color: var(--amber-d);
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   WELCOME SECTION
+========================================= */
+
+.driver-welcome {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    overflow: hidden;
+    padding: 32px;
+    margin-bottom: 22px;
+    border-radius: 20px;
+    background:
+        radial-gradient(700px 300px at 90% 0%, #1d4a85 0%, transparent 65%),
+        linear-gradient(145deg, var(--navy), var(--navy-2));
+    color: #fff;
+    box-shadow: var(--shadow);
+}
+
+.driver-welcome-content {
+    position: relative;
+    z-index: 1;
+}
+
+.driver-eyebrow {
+    margin-bottom: 9px;
+    color: var(--amber);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.driver-welcome h1 {
+    margin-bottom: 9px;
+    color: #fff;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.25;
+    font-weight: 800;
+}
+
+.driver-welcome p:not(.driver-eyebrow) {
+    max-width: 550px;
+    color: #b9c9e0;
+    font-size: 0.92rem;
+}
+
+.driver-welcome-date {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 130px;
+    padding-left: 25px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.driver-welcome-date span {
+    color: #b9c9e0;
+    font-size: 0.78rem;
+}
+
+.driver-welcome-date strong {
+    color: var(--amber);
+    font-size: 1.1rem;
+}
+
+
+/* =========================================
+   DRIVER PROFILE
+========================================= */
+
+.driver-profile-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 22px 25px;
+    margin-bottom: 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+
+.driver-profile-avatar {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    border-radius: 14px;
+    background: #fff3df;
+    color: var(--amber-d);
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.driver-profile-details {
+    flex: 1;
+    min-width: 150px;
+}
+
+.driver-profile-details h2 {
+    margin-bottom: 4px;
+    color: var(--navy);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.driver-profile-details p {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.driver-profile-details strong {
+    color: var(--navy);
+}
+
+.driver-profile-info,
+.driver-profile-status {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 110px;
+}
+
+.driver-profile-info span,
+.driver-status-label {
+    color: var(--muted);
+    font-size: 0.72rem;
+}
+
+.driver-profile-info strong {
+    color: var(--navy);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   STATISTICS
+========================================= */
+
+.driver-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.driver-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition: 0.2s ease;
+}
+
+.driver-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(11, 31, 58, 0.12);
+}
+
+.driver-stat-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 13px;
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.icon-manifests {
+    background: #fff3df;
+    color: var(--amber-d);
+}
+
+.icon-pickups {
+    background: #e4edfb;
+    color: var(--navy-2);
+}
+
+.icon-deliveries {
+    background: #dff5ec;
+    color: var(--green);
+}
+
+.icon-completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.driver-stat-content {
+    min-width: 0;
+}
+
+.driver-stat-content p {
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.driver-stat-content h2 {
+    margin-bottom: 3px;
+    color: var(--navy);
+    font-size: 1.65rem;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.driver-stat-content span {
+    color: #8a94a3;
+    font-size: 0.7rem;
+}
+
+
+/* =========================================
+   DASHBOARD SECTIONS
+========================================= */
+
+.driver-section {
+    padding: 25px;
+    margin-bottom: 25px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    scroll-margin-top: 100px;
+}
+
+.driver-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.driver-section-heading h2 {
+    margin-bottom: 5px;
+    color: var(--navy);
+    font-size: 1.12rem;
+    font-weight: 800;
+}
+
+.driver-section-heading p {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.driver-section-count {
+    padding: 7px 13px;
+    border-radius: 99px;
+    background: #fff3df;
+    color: var(--amber-d);
+    font-size: 0.74rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   TABLES
+========================================= */
+
+.driver-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.driver-table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.driver-table thead {
+    background: #f5f7fa;
+}
+
+.driver-table th {
+    padding: 14px 16px;
+    color: var(--navy);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+.driver-table td {
+    padding: 15px 16px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.driver-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.driver-table tbody tr:hover {
+    background: #fffaf2;
+}
+
+.driver-table .table-primary-text {
+    color: var(--navy-2);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.driver-table .table-address {
+    min-width: 160px;
+    max-width: 260px;
+    line-height: 1.6;
+}
+
+.driver-empty-state {
+    padding: 30px 15px !important;
+    color: #8a94a3 !important;
+    text-align: center;
+}
+
+
+/* =========================================
+   STATUS BADGES
+========================================= */
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border-radius: 99px;
+    background: #eef2f7;
+    color: var(--navy);
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-available,
+.status-active,
+.status-completed,
+.status-delivered {
+    background: #dff5ec;
+    color: #147a52;
+}
+
+.status-pending {
+    background: #fff3df;
+    color: #a45d00;
+}
+
+.status-assigned {
+    background: #e4edfb;
+    color: #214d85;
+}
+
+.status-in-progress,
+.status-in-transit {
+    background: #e9efff;
+    color: #4059a5;
+}
+
+.status-failed,
+.status-unavailable,
+.status-inactive {
+    background: #fde8e7;
+    color: #b42318;
+}
+
+.status-cancelled,
+.status-canceled {
+    background: #eef2f7;
+    color: #64748b;
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.driver-footer {
+    background: var(--navy);
+    color: #9fb3cf;
+}
+
+.driver-footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    font-size: 0.78rem;
+}
+
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+@media (max-width: 980px) {
+
+    .driver-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .driver-profile-strip {
+        gap: 18px;
+    }
+
+    .driver-menu {
+        gap: 14px;
+    }
+
+}
+
+@media (max-width: 720px) {
+
+    .driver-header .nav {
+        height: auto;
+        min-height: 72px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .driver-menu {
+        display: flex !important;
+        position: static !important;
+        width: 100%;
+        flex-wrap: wrap;
+        flex-direction: row !important;
+        padding: 0 !important;
+        background: transparent !important;
+        gap: 10px 18px;
+    }
+
+    .driver-menu a.link {
+        font-size: 0.8rem;
+    }
+
+    .driver-main {
+        padding-top: 25px;
+    }
+
+    .driver-page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .driver-welcome {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .driver-welcome-date {
+        width: 100%;
+        padding: 12px 0 0;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+}
+
+@media (max-width: 520px) {
+
+    .driver-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .driver-profile-strip {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .driver-profile-info,
+    .driver-profile-status {
+        width: 100%;
+    }
+
+    .driver-section {
+        padding: 17px;
+    }
+
+    .driver-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .driver-demo-notice {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .driver-footer-content {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
