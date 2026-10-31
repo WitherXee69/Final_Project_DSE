@@ -1,15 +1,18 @@
 <?php
-
+/**
+ * HELMS - Pickup business logic (Customer: Create / Read / Update / Cancel)
+ * Table: Pickup (see sql/HELMS.sql). Every function takes the project's $pdo.
+ */
 const PICKUP_WINDOWS = ['08:00 - 10:00', '10:00 - 12:00', '12:00 - 14:00', '14:00 - 16:00', '16:00 - 18:00'];
 
-/
+// Status values used by the customer side. Staff (CSO / Transport) change these later.
 const PK_REQUESTED = 'Requested';
 const PK_APPROVED  = 'Approved';
 const PK_REJECTED  = 'Rejected';
 const PK_CANCELLED = 'Cancelled';
 const PK_ALL = [PK_REQUESTED, PK_APPROVED, PK_REJECTED, PK_CANCELLED, 'Successful', 'Failed'];
 
-
+/** @return string[] error messages; empty = valid */
 function pickup_validate(array $d): array {
     $err  = [];
     $addr = trim($d['pickupAddress'] ?? '');
@@ -26,7 +29,7 @@ function pickup_validate(array $d): array {
     return $err;
 }
 
-
+/** CREATE - returns the new pickupId (AUTO_INCREMENT) */
 function pickup_create(PDO $pdo, int $customerId, array $d): int {
     $st = $pdo->prepare(
         "INSERT INTO Pickup (requestedAt, pickupDate, preferredTimeWindow, pickupAddress, status, customerId)
@@ -36,7 +39,7 @@ function pickup_create(PDO $pdo, int $customerId, array $d): int {
     return (int)$pdo->lastInsertId();
 }
 
-
+/** READ list - this customer's pickups; optional status filter and search (id or address) */
 function pickup_list(PDO $pdo, int $customerId, string $status = '', string $q = ''): array {
     $sql = "SELECT * FROM Pickup WHERE customerId = ?";
     $p   = [$customerId];
@@ -52,14 +55,14 @@ function pickup_list(PDO $pdo, int $customerId, string $status = '', string $q =
     return $st->fetchAll();
 }
 
-
+/** READ one - ownership enforced */
 function pickup_get(PDO $pdo, int $pickupId, int $customerId): ?array {
     $st = $pdo->prepare("SELECT * FROM Pickup WHERE pickupId = ? AND customerId = ?");
     $st->execute([$pickupId, $customerId]);
     return $st->fetch() ?: null;
 }
 
-
+/** UPDATE - only while still Requested (not yet approved by staff) */
 function pickup_update(PDO $pdo, int $pickupId, int $customerId, array $d): bool {
     $st = $pdo->prepare(
         "UPDATE Pickup SET pickupDate = ?, preferredTimeWindow = ?, pickupAddress = ?
@@ -70,7 +73,7 @@ function pickup_update(PDO $pdo, int $pickupId, int $customerId, array $d): bool
     return $st->rowCount() > 0;
 }
 
-
+/** CANCEL - soft delete (keeps the record); allowed while Requested or Approved */
 function pickup_cancel(PDO $pdo, int $pickupId, int $customerId): bool {
     $st = $pdo->prepare(
         "UPDATE Pickup SET status = ?, cancelledAt = NOW()
@@ -83,14 +86,14 @@ function pickup_cancel(PDO $pdo, int $pickupId, int $customerId): bool {
 function pickup_can_edit(array $p): bool   { return ($p['status'] ?? '') === PK_REQUESTED; }
 function pickup_can_cancel(array $p): bool { return in_array($p['status'] ?? '', [PK_REQUESTED, PK_APPROVED], true); }
 
-
+/** [status => count] for dashboard and filter tabs */
 function pickup_counts(PDO $pdo, int $customerId): array {
     $st = $pdo->prepare("SELECT status, COUNT(*) c FROM Pickup WHERE customerId = ? GROUP BY status");
     $st->execute([$customerId]);
     return $st->fetchAll(PDO::FETCH_KEY_PAIR);
 }
 
-
+/** Soonest upcoming pickup that is still live (Requested/Approved), or null */
 function pickup_next(PDO $pdo, int $customerId): ?array {
     $st = $pdo->prepare(
         "SELECT * FROM Pickup WHERE customerId = ? AND status IN (?, ?) AND pickupDate >= CURDATE()

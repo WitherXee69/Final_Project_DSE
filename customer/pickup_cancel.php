@@ -1,5 +1,5 @@
 <?php
-// CANCEL: POST only (soft delete - sets status = Cancelled)
+// CANCEL: POST only (soft delete - sets status = Cancelled), no screen of its own
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/pickup_functions.php';
 $uid = cust_id();

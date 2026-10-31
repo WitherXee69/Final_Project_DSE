@@ -21,14 +21,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 $action = 'pickup_edit.php?id=' . $id; $submitLabel = 'Save changes';
-cust_header($pdo, 'Edit pickup #' . $id, 'pickups');
-cust_page_head('PICKUP MANAGEMENT', 'Edit pickup #' . $id);
+cust_header($pdo, 'Edit pickup #' . $id, 'pickups', 'cu-page login-page');
 ?>
-<div class="cu-two-col">
-  <section class="cu-panel"><?php include __DIR__ . '/_pickup_form.php'; ?></section>
-  <aside class="cu-panel cu-tips">
-    <h2>Good to know</h2>
-    <p class="cu-muted">You can change the address, date and time window while the request is <b>awaiting approval</b>. Once our team approves it, changes are locked, but you can still cancel.</p>
-  </aside>
-</div>
+<main class="login-main">
+  <section class="login-intro">
+    <span class="pill">PICKUP #<?= $id ?> &middot; HELMS</span>
+    <h1>Update your<br><span>pickup details.</span></h1>
+    <p>You can change the address, date and time window while the request is awaiting approval.</p>
+    <div class="staff-note">Once our team approves the pickup, it can no longer be edited, but you can still cancel it from your pickups list.</div>
+  </section>
+
+  <section class="login-card" aria-labelledby="formTitle">
+    <div class="login-card-head">
+      <div class="login-symbol">✎</div>
+      <h2 id="formTitle">Edit pickup #<?= $id ?></h2>
+      <p>Change the details below and save.</p>
+    </div>
+    <?php include __DIR__ . '/_pickup_form.php'; ?>
+    <div class="login-divider">DON'T WANT TO CHANGE ANYTHING?</div>
+    <p class="login-bottom"><a class="text-link" href="pickup_view.php?id=<?= $id ?>">Back to pickup details</a></p>
+  </section>
+</main>
 <?php cust_footer(); ?>

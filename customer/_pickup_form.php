@@ -1,24 +1,22 @@
 <?php /* Shared by pickup_new.php and pickup_edit.php. Needs: $values, $errors, $action, $submitLabel */ ?>
 <?php if (!empty($errors)): ?>
-  <div class="cu-alert cu-alert-error"><strong>Please fix the following:</strong>
+  <div class="cu-notice cu-notice-error"><strong>Please fix the following:</strong>
     <ul><?php foreach ($errors as $er): ?><li><?= cust_h($er) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
-<form class="cu-form" id="pickupForm" method="post" action="<?= cust_h($action) ?>" novalidate>
+<form class="login-form" id="pickupForm" method="post" action="<?= cust_h($action) ?>" novalidate>
   <input type="hidden" name="csrf" value="<?= cust_h(cust_csrf()) ?>">
 
-  <div class="cu-field cu-full">
+  <div class="form-row">
     <label for="pickupAddress">Pickup address</label>
     <textarea id="pickupAddress" name="pickupAddress" rows="3" maxlength="255" placeholder="House / building, street, city" required><?= cust_h($values['pickupAddress'] ?? '') ?></textarea>
-    <small>Where should our driver collect the parcel?</small>
   </div>
 
-  <div class="cu-field">
+  <div class="form-row">
     <label for="pickupDate">Pickup date</label>
     <input id="pickupDate" name="pickupDate" type="date" min="<?= date('Y-m-d') ?>" value="<?= cust_h($values['pickupDate'] ?? '') ?>" required>
-    <small>Today or a future date.</small>
   </div>
 
-  <div class="cu-field cu-full">
+  <div class="form-row">
     <label id="windowLabel">Preferred time window</label>
     <div class="cu-windows" role="radiogroup" aria-labelledby="windowLabel">
       <?php foreach (PICKUP_WINDOWS as $i => $w): ?>
@@ -28,8 +26,5 @@
     </div>
   </div>
 
-  <div class="cu-form-actions">
-    <button class="cu-btn cu-btn-primary" type="submit"><?= cust_h($submitLabel) ?></button>
-    <a class="cu-btn cu-btn-light" href="pickups.php">Cancel</a>
-  </div>
+  <button class="btn btn-primary login-submit" type="submit"><?= cust_h($submitLabel) ?> <span aria-hidden="true">→</span></button>
 </form>

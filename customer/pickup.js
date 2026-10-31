@@ -1,7 +1,12 @@
-
+/** HELMS - customer pages: mobile menu, pickup form checks (server re-validates), cancel dialog */
 (function () {
   'use strict';
 
+  // Mobile menu (same behaviour as the home page)
+  var burger = document.getElementById('burger'), menu = document.getElementById('menu');
+  if (burger && menu) burger.addEventListener('click', function () { menu.classList.toggle('open'); });
+
+  // Form validation
   var form = document.getElementById('pickupForm');
   if (form) {
     form.addEventListener('submit', function (e) {
@@ -20,7 +25,7 @@
         if (!box) {
           box = document.createElement('div');
           box.id = 'jsErrors';
-          box.className = 'cu-alert cu-alert-error';
+          box.className = 'cu-notice cu-notice-error';
           form.parentNode.insertBefore(box, form);
         }
         box.innerHTML = '<strong>Please fix the following:</strong><ul>' +
@@ -30,7 +35,7 @@
     });
   }
 
-  // Styled confirm dialog for any form with data-confirm
+  // Styled confirm dialog for any form carrying data-confirm
   var dlg = document.getElementById('cuConfirm');
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) {
