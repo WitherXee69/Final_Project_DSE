@@ -1,19 +1,25 @@
 <?php
+
 require_once 'config/database.php';
 
-$totalCustomers = $pdo->query(
-    "SELECT COUNT(*) FROM Customer"
-)->fetchColumn();
+$search = $_GET['search'] ?? '';
 
-$corporateCustomers = $pdo->query(
-    "SELECT COUNT(*) FROM CorporateCustomer"
-)->fetchColumn();
+$searchTerm = "%" . $search . "%";
 
-$activeAgreements = $pdo->query(
-    "SELECT COUNT(*) FROM CorporateAgreement"
-)->fetchColumn();
+$stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, ic.name AS individualName, cc.companyName FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId LIKE ? OR c.email LIKE ? OR ic.name LIKE ? OR cc.companyName LIKE ? ORDER BY c.userId");
+
+$stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+
+$customers = $stmt->fetchAll();
+
+$totalCustomers = $pdo->query("SELECT COUNT(*) FROM Customer")->fetchColumn();
+
+$corporateCustomers = $pdo->query("SELECT COUNT(*) FROM CorporateCustomer")->fetchColumn();
+
+$activeAgreements = $pdo->query("SELECT COUNT(*) FROM CorporateAgreement")->fetchColumn();
 
 $individualCustomers = $totalCustomers - $corporateCustomers;
+
 ?>
 
 <!DOCTYPE html>
@@ -139,13 +145,13 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
 
                 <p style="margin-bottom:20px; color:#6b7280;">Search and manage individual and corporate customer records.</p>
 
-                <form style="margin-bottom:25px;">
+                <form method="get" style="margin-bottom:25px;">
 
                     <div class="field">
 
-                        <input type="text" name="search" placeholder="Search by customer ID, customer name, company name or email...">
-
+                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by customer ID, customer name, company name or email...">
                         <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="customer_service_dashboard.php" class="btn btn-outline">Clear</a>
 
                     </div>
 
@@ -161,48 +167,23 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
-                            <th>Actions</th>
                         </tr>
 
                     </thead>
 
                     <tbody>
 
-                        <tr>
-                            <td>USR-000013</td>
-                            <td>Individual</td>
-                            <td>Amal Rathnayake</td>
-                            <td>amal.r@example.com</td>
-                            <td>+94771234013</td>
-
-                            <td>
-                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
-                            </td>
-                        </tr>
+                        <?php foreach ($customers as $customer): ?>
 
                         <tr>
-                            <td>USR-000014</td>
-                            <td>Individual</td>
-                            <td>Sachini Wijesinghe</td>
-                            <td>sachini.w@example.com</td>
-                            <td>+94771234014</td>
-
-                            <td>
-                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
-                            </td>
+                            <td><?= $customer['userId'] ?></td>
+                            <td><?= !empty($customer['companyName']) ? 'Corporate' : 'Individual' ?></td>
+                            <td><?= $customer['individualName'] ?? $customer['companyName'] ?></td>
+                            <td><?= $customer['email'] ?></td>
+                            <td><?= $customer['contactNumber'] ?></td>
                         </tr>
 
-                        <tr>
-                            <td>USR-000015</td>
-                            <td>Corporate</td>
-                            <td>Lanka Tea Exporters (Pvt) Ltd</td>
-                            <td>orders@lankatea.example.com</td>
-                            <td>+94112223015</td>
-
-                            <td>
-                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
-                            </td>
-                        </tr>
+                        <?php endforeach; ?>
 
                     </tbody>
 
