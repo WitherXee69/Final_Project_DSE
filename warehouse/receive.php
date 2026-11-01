@@ -28,7 +28,6 @@ $intakeMethods = [
     'PICKUP'
 ];
 
-// Load the available customers, receivers and warehouses.
 try {
 
     $customerQuery = $pdo->query(
@@ -83,7 +82,6 @@ try {
 }
 
 
-// Process the form.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 
     $customerId = trim($_POST['customerId'] ?? '');

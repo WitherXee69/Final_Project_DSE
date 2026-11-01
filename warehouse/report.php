@@ -35,7 +35,7 @@ wh_header('Storage report', 'report');
         </div>
         <span class="wh-role-pill">Manager report</span>
     </div>
-    <div class="wh-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="wh-grid wh-report-grid">
         <div class="wh-card">
             <div class="wh-stat-label">Total capacity</div>
             <div class="wh-stat-value"><?= $cap ?></div>
@@ -49,7 +49,7 @@ wh_header('Storage report', 'report');
             <div class="wh-stat-value"><?= $pct ?>%</div>
         </div>
     </div>
-    <h2 style="font-size:1rem;color:#0b1f3a;margin:12px 0">Parcel status summary</h2>
+    <h2 class="wh-report-heading">Parcel status summary</h2>
     <div class="wh-table-wrap">
         <table class="wh-table">
             <thead>
@@ -68,6 +68,6 @@ wh_header('Storage report', 'report');
             </tbody>
         </table>
     </div>
-    <p class="wh-muted" style="margin-top:14px">This is a demonstration report calculated from the temporary session records. Capacity and current-load figures are sample values from the diagram fields and must be connected to the actual Warehouse table.</p>
+    <p class="wh-muted wh-report-note">This is a demonstration report calculated from the temporary session records. Capacity and current-load figures are sample values from the diagram fields and must be connected to the actual Warehouse table.</p>
 </section>
 <?php wh_footer(); ?>

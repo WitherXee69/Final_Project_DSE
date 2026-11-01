@@ -2,12 +2,10 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/_layout.php';
 
-// Get search and filter values
 $q = trim($_GET['q'] ?? '');
 $status = trim($_GET['status'] ?? '');
 $warehouseId = trim($_GET['warehouse'] ?? '');
 
-// Build parcel query
 $sql = "
     SELECT
         p.parcelId,
@@ -27,7 +25,6 @@ $sql = "
 
 $params = [];
 
-// Search by parcel ID, description or storage location
 if ($q !== '') {
     $sql .= "
         AND (
@@ -40,27 +37,22 @@ if ($q !== '') {
     $params['search'] = "%$q%";
 }
 
-// Filter by parcel status
 if ($status !== '') {
     $sql .= " AND p.status = :status";
     $params['status'] = $status;
 }
 
-// Filter by warehouse
 if ($warehouseId !== '') {
     $sql .= " AND p.warehouseId = :warehouseId";
     $params['warehouseId'] = $warehouseId;
 }
 
-// Latest parcels first
 $sql .= " ORDER BY p.parcelId DESC";
 
-// Execute parcel query
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $parcels = $stmt->fetchAll();
 
-// Get warehouses for dropdown
 $stmt = $pdo->prepare("
     SELECT warehouseId, warehouseName
     FROM Warehouse
@@ -69,7 +61,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $warehouses = $stmt->fetchAll();
 
-// Available parcel statuses
 $statuses = [
     'PENDING_PICKUP',
     'RECEIVED_AT_WAREHOUSE',
@@ -103,7 +94,6 @@ wh_header('Parcel register', 'parcels');
         </a>
     </div>
 
-    <!-- Search and filters -->
     <form class="wh-search" method="get">
 
         <input
@@ -113,7 +103,6 @@ wh_header('Parcel register', 'parcels');
             placeholder="Search parcels..."
         >
 
-        <!-- Status filter -->
         <select name="status">
             <option value="">All statuses</option>
 
@@ -128,7 +117,6 @@ wh_header('Parcel register', 'parcels');
 
         </select>
 
-        <!-- Warehouse filter -->
         <select name="warehouse">
             <option value="">All warehouses</option>
 
@@ -153,7 +141,6 @@ wh_header('Parcel register', 'parcels');
 
     </form>
 
-    <!-- Parcel table -->
     <div class="wh-table-wrap">
 
         <table class="wh-table">

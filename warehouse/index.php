@@ -2,17 +2,14 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/_layout.php';
 
-// Get total parcel count
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM Parcel");
 $stmt->execute();
 $totalParcels = $stmt->fetchColumn();
 
-// Get total warehouse count
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM Warehouse");
 $stmt->execute();
 $totalWarehouses = $stmt->fetchColumn();
 
-// Get parcels received at warehouses
 $stmt = $pdo->prepare("
     SELECT COUNT(*)
     FROM Parcel
@@ -21,7 +18,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $totalStoredParcels = $stmt->fetchColumn();
 
-// Get packed parcel count
 $stmt = $pdo->prepare("
     SELECT COUNT(*)
     FROM Parcel
@@ -30,7 +26,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $totalPackedParcels = $stmt->fetchColumn();
 
-// Get parcels awaiting confirmation
 $stmt = $pdo->prepare("
     SELECT COUNT(*)
     FROM Parcel
@@ -40,7 +35,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $totalPendingParcels = $stmt->fetchColumn();
 
-// Get recent parcels
 $stmt = $pdo->prepare("
     SELECT parcelId, description, parcelReceivedDate,
            storageLocationCode, status
@@ -51,7 +45,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $parcels = $stmt->fetchAll();
 
-// Get combined warehouse capacity
 $stmt = $pdo->prepare("
     SELECT
         COALESCE(SUM(capacity), 0) AS totalCapacity,

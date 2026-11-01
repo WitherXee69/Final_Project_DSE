@@ -30,7 +30,6 @@ if (!preg_match('/^HEN-[0-9]{4}-[0-9]{6}$/', $trackingId)) {
 }
 
 try {
-    // Get parcel status.
     $parcelQuery = $pdo->prepare("
         SELECT parcelId, status
         FROM Parcel

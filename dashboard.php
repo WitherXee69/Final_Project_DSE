@@ -6,7 +6,6 @@ require_login();
 $role = $_SESSION['role'];
 $name = $_SESSION['full_name'] ?? 'HELMS User';
 
-// Use the existing warehouse dashboard.
 if (in_array($role, ['WarehouseOfficer', 'WarehouseManager'], true)) {
     header('Location: warehouse/index.php');
     exit;
@@ -59,7 +58,7 @@ $displayRole = $roleNames[$role] ?? $role;
     </div>
 </header>
 
-<main class="container" style="padding-top:60px;padding-bottom:60px;">
+<main class="container dashboard-main">
     <span class="pill"><?= h($displayRole) ?> PORTAL</span>
 
     <h1>Welcome, <?= h($name) ?>.</h1>
@@ -68,7 +67,7 @@ $displayRole = $roleNames[$role] ?? $role;
         You are signed in to the Henowic Enterprise Logistics Management System.
     </p>
 
-    <section class="login-card" style="max-width:650px;margin-top:30px;">
+    <section class="login-card dashboard-account-card">
         <h2>Your account</h2>
 
         <p><strong>Name:</strong> <?= h($name) ?></p>

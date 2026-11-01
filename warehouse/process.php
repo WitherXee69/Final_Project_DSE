@@ -201,7 +201,6 @@ if ($id === '') {
     }
 }
 
-// Load the latest database values for displaying the page.
 if ($id !== '' && $parcel === null) {
     try {
         $parcel = wh_load_process_parcel($pdo, $id);
@@ -276,7 +275,6 @@ wh_header('Warehouse processing', 'parcels');
 
         <div class="wh-form">
 
-            <!-- Step 1: Confirm parcel details -->
             <form method="post" class="wh-panel">
 
                 <h2>1. Confirm parcel details</h2>
@@ -284,8 +282,7 @@ wh_header('Warehouse processing', 'parcels');
                 <p class="wh-muted">
                     Record the measured weight and confirm the supplied details.
                 </p>
-
-                <div class="wh-field" style="margin-top:12px">
+                <div class="wh-field wh-field-spaced">
                     <label for="confirmedWeight">
                         Confirmed weight (kg)
                     </label>
@@ -322,7 +319,6 @@ wh_header('Warehouse processing', 'parcels');
 
             </form>
 
-            <!-- Step 2: Assign storage location -->
             <form method="post" class="wh-panel">
 
                 <h2>2. Assign storage location</h2>
@@ -330,8 +326,7 @@ wh_header('Warehouse processing', 'parcels');
                 <p class="wh-muted">
                     Enter the warehouse shelf or rack location code.
                 </p>
-
-                <div class="wh-field" style="margin-top:12px">
+                <div class="wh-field wh-field-spaced">
                     <label for="storageLocationCode">
                         Storage location code
                     </label>
@@ -369,7 +364,6 @@ wh_header('Warehouse processing', 'parcels');
 
             </form>
 
-            <!-- Step 3: Mark parcel packed -->
             <form method="post" class="wh-panel">
 
                 <h2>3. Mark parcel packed</h2>
@@ -397,7 +391,6 @@ wh_header('Warehouse processing', 'parcels');
 
             </form>
 
-            <!-- Step 4: Release to sender -->
             <form method="post" class="wh-panel">
 
                 <h2>4. Release to sender</h2>

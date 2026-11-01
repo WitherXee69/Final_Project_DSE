@@ -269,7 +269,7 @@ $yesNo = static function ($value) {
 
         </div>
 
-        <div class="wh-form-actions" style="margin-top:18px">
+    <div class="wh-form-actions wh-form-actions-spaced">
 
             <a class="wh-btn"
                href="edit.php?id=<?= urlencode($parcel['parcelId']) ?>">

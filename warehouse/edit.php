@@ -24,7 +24,6 @@ $intakeMethods = [
     'WALK_IN'
 ];
 
-// Retrieve the existing parcel.
 if ($id !== '') {
     try {
         $stmt = $pdo->prepare("
@@ -61,7 +60,6 @@ if (!$parcel) {
     exit;
 }
 
-// Process submitted changes.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $description = trim($_POST['description'] ?? '');
@@ -72,29 +70,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dimensions = trim($_POST['dimensions'] ?? '');
     $isFragile = isset($_POST['isFragile']) ? 1 : 0;
 
-    // Validate description.
     if ($description === '') {
         $error = 'Description cannot be empty.';
     } elseif (strlen($description) > 255) {
         $error = 'Description cannot exceed 255 characters.';
     }
 
-    // Validate category.
     elseif (!in_array($category, $categories, true)) {
         $error = 'Select a valid parcel category.';
     }
 
-    // Validate service type.
     elseif (!in_array($serviceType, $serviceTypes, true)) {
         $error = 'Select a valid service type.';
     }
 
-    // Validate intake method.
     elseif (!in_array($intakeMethod, $intakeMethods, true)) {
         $error = 'Select a valid intake method.';
     }
 
-    // Validate declared weight.
     elseif (
         $declaredWeight !== '' &&
         (!is_numeric($declaredWeight) || (float)$declaredWeight < 0)
@@ -102,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Enter a valid declared weight.';
     }
 
-    // Validate dimensions.
     elseif (strlen($dimensions) > 50) {
         $error = 'Dimensions cannot exceed 50 characters.';
     }
