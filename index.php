@@ -11,9 +11,97 @@
  */
 session_start();
 
+require_once __DIR__ . '/config/database.php';
+
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName   = $_SESSION['full_name'] ?? '';
 $userRole   = $_SESSION['role'] ?? '';
+
+// Parcel tracking variables
+$trackingResult = null;
+$trackingEvents = [];
+$trackingError = '';
+$trackingId = '';
+
+// Handle tracking form submission on this same page
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['track_parcel'])) {
+
+    $trackingId = strtoupper(trim($_POST['id'] ?? ''));
+
+    if (!preg_match('/^HEN-[0-9]{4}-[0-9]{6}$/', $trackingId)) {
+
+        $trackingError = 'Please enter a valid tracking number.';
+
+    } else {
+
+        try {
+            // Find the parcel
+            $stmt = $pdo->prepare("
+                SELECT parcelId, status
+                FROM Parcel
+                WHERE parcelId = :parcelId
+                LIMIT 1
+            ");
+
+            $stmt->execute([
+                ':parcelId' => $trackingId
+            ]);
+
+            $trackingResult = $stmt->fetch();
+
+            if (!$trackingResult) {
+
+                $trackingError = 'No parcel was found with that tracking number.';
+
+            } else {
+
+                // Retrieve only events visible to the receiver
+                $eventStmt = $pdo->prepare("
+                    SELECT eventType, occurredAt, locationDescription
+                    FROM TrackingEvent
+                    WHERE parcelId = :parcelId
+                    AND isVisibleToReceiver = 1
+                    ORDER BY occurredAt ASC
+                ");
+
+                $eventStmt->execute([
+                    ':parcelId' => $trackingId
+                ]);
+
+                $trackingEvents = $eventStmt->fetchAll();
+            }
+
+        } catch (PDOException $e) {
+
+            error_log('Parcel tracking error: ' . $e->getMessage());
+
+            $trackingError = 'Unable to retrieve tracking information right now. Please try again later.';
+        }
+    }
+}
+
+// Convert database status values into readable labels
+function formatTrackingStatus($status)
+{
+    $statuses = [
+        'PICKED_UP' => 'Picked Up',
+        'RECEIVED_AT_WAREHOUSE' => 'Received at Warehouse',
+        'IN_WAREHOUSE' => 'In Warehouse',
+        'DETAILS_CONFIRMED' => 'Parcel Details Confirmed',
+        'PACKED' => 'Packed',
+        'RELEASED_TO_SENDER' => 'Released to Sender',
+        'IN_TRANSIT' => 'In Transit',
+        'OUT_FOR_DELIVERY' => 'Out for Delivery',
+        'DELIVERED' => 'Delivered',
+        'FAILED_DELIVERY' => 'Delivery Failed',
+        'DELIVERY_FAILED' => 'Delivery Failed',
+        'RETURNED' => 'Returned',
+        'CANCELLED' => 'Cancelled',
+        'ON_HOLD' => 'On Hold'
+    ];
+
+    return $statuses[$status] ?? ucwords(strtolower(str_replace('_', ' ', $status)));
+}
 
 $services = [
     ['Standard Delivery',   'Reliable island-wide domestic parcel delivery.',                      'M3 7h11v9H3zM14 10h4l3 3v3h-7z'],
@@ -98,50 +186,100 @@ $staffRoles = [
     </div>
 
     <!-- Public tracking -->
-    <div class="track">
+    <div class="track" id="tracking">
       <h3>
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         Track your parcel
       </h3>
       <p>Enter your tracking number to see the latest status.</p>
-      <form action="track.php" method="get" class="field" id="trackForm">
-        <input type="text" name="id" id="trackId" placeholder="e.g. HEN-2026-000123" required maxlength="30" autocomplete="off">
-        <button class="btn btn-primary" type="submit">Track</button>
-      </form>
-      <div class="steps">
-        <div class="step done">
-          <div class="dot">
-            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
-              <path d="M5 12l5 5 9-10"/>
-            </svg>
-          </div>
-          Picked up
+      <form action="index.php#tracking" method="POST" class="field" id="trackForm">
+    <input
+        type="text"
+        name="id"
+        id="trackId"
+        placeholder="e.g. HEN-2026-000123"
+        required
+        maxlength="30"
+        autocomplete="off"
+        value="<?= htmlspecialchars($trackingId) ?>"
+    >
+
+    <button class="btn btn-primary" type="submit" name="track_parcel">
+        Track
+    </button>
+</form>
+
+<?php if ($trackingError): ?>
+
+    <div class="tracking-message error">
+        <?= htmlspecialchars($trackingError) ?>
+    </div>
+
+<?php endif; ?>
+
+
+<?php if ($trackingResult): ?>
+
+    <div class="tracking-result">
+
+        <div class="tracking-result-header">
+            <div>
+                <small>TRACKING NUMBER</small>
+                <h4><?= htmlspecialchars($trackingResult['parcelId']) ?></h4>
+            </div>
+
+            <span class="tracking-status">
+                <?= htmlspecialchars(formatTrackingStatus($trackingResult['status'])) ?>
+            </span>
         </div>
-        <div class="step done">
-          <div class="dot">
-            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
-              <path d="M5 12l5 5 9-10"/>
-            </svg>
-          </div>
-          In warehouse
+
+        <div class="tracking-timeline">
+
+            <h4>Tracking History</h4>
+
+            <?php if (count($trackingEvents) > 0): ?>
+
+                <?php foreach ($trackingEvents as $event): ?>
+
+                    <div class="tracking-event">
+
+                        <div class="tracking-event-marker"></div>
+
+                        <div class="tracking-event-content">
+
+                            <strong>
+                                <?= htmlspecialchars(formatTrackingStatus($event['eventType'])) ?>
+                            </strong>
+
+                            <p>
+                                <?= htmlspecialchars($event['locationDescription'] ?: 'Location not specified') ?>
+                            </p>
+
+                            <small>
+                                <?= htmlspecialchars(date('d M Y, h:i A', strtotime($event['occurredAt']))) ?>
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <p class="no-tracking-events">
+                    No public tracking updates are available yet.
+                </p>
+
+            <?php endif; ?>
+
         </div>
-        <div class="step now">
-          <div class="dot">
-            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
-              <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
-            </svg>
-          </div>
-          Out for delivery
-        </div>
-        <div class="step">
-          <div class="dot">
-            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">
-              <path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/>
-            </svg>
-          </div>
-          Delivered
-        </div>
-      </div>
+
+    </div>
+
+<?php endif; ?>
+
+<div id="trackResult" class="track-result" aria-live="polite"></div>
     </div>
   </div>
 </section>

@@ -1,57 +1,328 @@
 <?php
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/_layout.php';
 
-$id = $_GET['id'] ?? '';
-$p = wh_find($id);
+$id = trim($_GET['id'] ?? '');
 $error = '';
+$parcel = null;
 
-if (!$p) {
+$categories = [
+    'HOUSEHOLD',
+    'DOCUMENT',
+    'COMMERCIAL',
+    'PERSONAL',
+    'ELECTRONICS'
+];
+
+$serviceTypes = [
+    'STANDARD',
+    'EXPRESS'
+];
+
+$intakeMethods = [
+    'PICKUP',
+    'WALK_IN'
+];
+
+// Retrieve the existing parcel.
+if ($id !== '') {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT *
+            FROM Parcel
+            WHERE parcelId = :parcelId
+            LIMIT 1
+        ");
+
+        $stmt->execute(['parcelId' => $id]);
+        $parcel = $stmt->fetch();
+
+    } catch (PDOException $e) {
+        error_log('Warehouse edit retrieval error: ' . $e->getMessage());
+        $error = 'Unable to retrieve parcel information.';
+    }
+}
+
+if (!$parcel) {
     wh_header('Edit parcel', 'parcels');
-    ?><section class="wh-panel"><p class="wh-empty">Parcel not found.</p></section><?php
+    ?>
+
+    <section class="wh-panel">
+        <p class="wh-empty">
+            <?= wh_h($error ?: 'Parcel not found.') ?>
+            <a class="text-link" href="parcels.php">
+                Return to parcel register
+            </a>.
+        </p>
+    </section>
+
+    <?php
     wh_footer();
     exit;
 }
 
+// Process submitted changes.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selectedStatus = $_POST['status'] ?? '';
-    $p['description'] = trim($_POST['description'] ?? '');
-    $p['parcelCategory'] = $_POST['parcelCategory'] ?? $p['parcelCategory'];
-    $p['isFragile'] = isset($_POST['isFragile']);
-    $p['serviceType'] = $_POST['serviceType'] ?? $p['serviceType'];
-    $p['intakeMethod'] = $_POST['intakeMethod'] ?? $p['intakeMethod'];
-    $p['declaredWeight'] = trim($_POST['declaredWeight'] ?? '');
-    $p['confirmedWeight'] = trim($_POST['confirmedWeight'] ?? '');
-    $p['dimensions'] = trim($_POST['dimensions'] ?? '');
 
-    if ($p['description'] === '') {
+    $description = trim($_POST['description'] ?? '');
+    $category = $_POST['parcelCategory'] ?? '';
+    $serviceType = $_POST['serviceType'] ?? '';
+    $intakeMethod = $_POST['intakeMethod'] ?? '';
+    $declaredWeight = trim($_POST['declaredWeight'] ?? '');
+    $dimensions = trim($_POST['dimensions'] ?? '');
+    $isFragile = isset($_POST['isFragile']) ? 1 : 0;
+
+    // Validate description.
+    if ($description === '') {
         $error = 'Description cannot be empty.';
-    } elseif (!isset(wh_status_options()[$selectedStatus])) {
-        $error = 'Select a valid parcel status.';
-    } else {
-        $p['status'] = $selectedStatus;
-        wh_save($p);
-        header('Location: view.php?id=' . urlencode($id) . '&updated=1');
-        exit;
+    } elseif (strlen($description) > 255) {
+        $error = 'Description cannot exceed 255 characters.';
     }
+
+    // Validate category.
+    elseif (!in_array($category, $categories, true)) {
+        $error = 'Select a valid parcel category.';
+    }
+
+    // Validate service type.
+    elseif (!in_array($serviceType, $serviceTypes, true)) {
+        $error = 'Select a valid service type.';
+    }
+
+    // Validate intake method.
+    elseif (!in_array($intakeMethod, $intakeMethods, true)) {
+        $error = 'Select a valid intake method.';
+    }
+
+    // Validate declared weight.
+    elseif (
+        $declaredWeight !== '' &&
+        (!is_numeric($declaredWeight) || (float)$declaredWeight < 0)
+    ) {
+        $error = 'Enter a valid declared weight.';
+    }
+
+    // Validate dimensions.
+    elseif (strlen($dimensions) > 50) {
+        $error = 'Dimensions cannot exceed 50 characters.';
+    }
+
+    if ($error === '') {
+
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE Parcel
+                SET
+                    description = :description,
+                    parcelCategory = :category,
+                    isFragile = :isFragile,
+                    serviceType = :serviceType,
+                    intakeMethod = :intakeMethod,
+                    declaredWeight = :declaredWeight,
+                    dimensions = :dimensions
+
+                WHERE parcelId = :parcelId
+            ");
+
+            $stmt->execute([
+                'description' => $description,
+                'category' => $category,
+                'isFragile' => $isFragile,
+                'serviceType' => $serviceType,
+                'intakeMethod' => $intakeMethod,
+                'declaredWeight' => $declaredWeight === ''
+                    ? null
+                    : $declaredWeight,
+                'dimensions' => $dimensions === ''
+                    ? null
+                    : $dimensions,
+                'parcelId' => $id
+            ]);
+
+            header(
+                'Location: view.php?id=' .
+                urlencode($id) .
+                '&updated=1'
+            );
+            exit;
+
+        } catch (PDOException $e) {
+            error_log('Warehouse parcel update error: ' . $e->getMessage());
+            $error = 'Unable to save parcel changes. Please try again.';
+        }
+    }
+
+    // Preserve submitted values when validation fails.
+    $parcel['description'] = $description;
+    $parcel['parcelCategory'] = $category;
+    $parcel['isFragile'] = $isFragile;
+    $parcel['serviceType'] = $serviceType;
+    $parcel['intakeMethod'] = $intakeMethod;
+    $parcel['declaredWeight'] = $declaredWeight;
+    $parcel['dimensions'] = $dimensions;
 }
 
-$currentStatus = wh_normalize_status($p['status']);
 wh_header('Edit parcel details', 'parcels');
+
 ?>
+
 <section class="wh-panel">
-    <div class="wh-panel-head"><div><h2>Update <?= wh_h($id) ?></h2><p class="wh-muted">Parcel ID is treated as the record identifier and cannot be changed here.</p></div></div>
-    <?php if ($error): ?><p class="wh-error"><?= wh_h($error) ?></p><?php endif; ?>
+
+    <div class="wh-panel-head">
+        <div>
+            <h2>Update <?= wh_h($parcel['parcelId']) ?></h2>
+
+            <p class="wh-muted">
+                Parcel ID is the record identifier and cannot be changed.
+            </p>
+        </div>
+    </div>
+
+    <?php if ($error): ?>
+        <p class="wh-error"><?= wh_h($error) ?></p>
+    <?php endif; ?>
+
     <form class="wh-form" method="post">
-        <div class="wh-field full"><label>Description *</label><input name="description" required value="<?= wh_h($p['description']) ?>"></div>
-        <div class="wh-field"><label>Category</label><select name="parcelCategory"><?php foreach (['General', 'Electronics', 'Fragile', 'Documents', 'Clothing', 'Other'] as $v): ?><option value="<?= wh_h($v) ?>" <?= $p['parcelCategory'] === $v ? 'selected' : '' ?>><?= wh_h($v) ?></option><?php endforeach; ?></select></div>
-        <div class="wh-field"><label>Service type</label><select name="serviceType"><?php foreach (['Standard', 'Express', 'Scheduled'] as $v): ?><option value="<?= wh_h($v) ?>" <?= $p['serviceType'] === $v ? 'selected' : '' ?>><?= wh_h($v) ?></option><?php endforeach; ?></select></div>
-        <div class="wh-field"><label>Intake method</label><select name="intakeMethod"><?php foreach (['Customer Drop-off', 'Driver Pickup'] as $v): ?><option value="<?= wh_h($v) ?>" <?= $p['intakeMethod'] === $v ? 'selected' : '' ?>><?= wh_h($v) ?></option><?php endforeach; ?></select></div>
-        <div class="wh-field"><label>Declared weight (kg)</label><input type="number" min="0" step=".01" name="declaredWeight" value="<?= wh_h($p['declaredWeight']) ?>"></div>
-        <div class="wh-field"><label>Confirmed weight (kg)</label><input type="number" min="0" step=".01" name="confirmedWeight" value="<?= wh_h($p['confirmedWeight']) ?>"></div>
-        <div class="wh-field"><label>Dimensions</label><input name="dimensions" value="<?= wh_h($p['dimensions']) ?>"></div>
-        <div class="wh-field"><label>Parcel status *</label><select name="status" required><?php foreach (wh_status_options() as $value => $label): ?><option value="<?= wh_h($value) ?>" <?= $currentStatus === $value ? 'selected' : '' ?>><?= wh_h($label) ?></option><?php endforeach; ?></select><small>Available statuses follow the HELMS parcel lifecycle.</small></div>
-        <div class="wh-field"><label class="wh-check"><input type="checkbox" name="isFragile" <?= $p['isFragile'] ? 'checked' : '' ?>>Fragile parcel</label></div>
-        <div class="wh-form-actions"><button class="wh-btn" type="submit">Save changes</button><a class="wh-btn secondary" href="view.php?id=<?= urlencode($id) ?>">Cancel</a></div>
+
+        <div class="wh-field full">
+            <label>Description *</label>
+
+            <input
+                type="text"
+                name="description"
+                maxlength="255"
+                required
+                value="<?= wh_h($parcel['description']) ?>"
+            >
+        </div>
+
+        <div class="wh-field">
+            <label>Category</label>
+
+            <select name="parcelCategory" required>
+
+                <?php foreach ($categories as $value): ?>
+
+                    <option
+                        value="<?= wh_h($value) ?>"
+                        <?= $parcel['parcelCategory'] === $value
+                            ? 'selected'
+                            : '' ?>
+                    >
+                        <?= wh_h(ucwords(strtolower($value))) ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <div class="wh-field">
+            <label>Service type</label>
+
+            <select name="serviceType" required>
+
+                <?php foreach ($serviceTypes as $value): ?>
+
+                    <option
+                        value="<?= wh_h($value) ?>"
+                        <?= $parcel['serviceType'] === $value
+                            ? 'selected'
+                            : '' ?>
+                    >
+                        <?= wh_h(ucwords(strtolower($value))) ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <div class="wh-field">
+            <label>Intake method</label>
+
+            <select name="intakeMethod" required>
+
+                <?php foreach ($intakeMethods as $value): ?>
+
+                    <option
+                        value="<?= wh_h($value) ?>"
+                        <?= $parcel['intakeMethod'] === $value
+                            ? 'selected'
+                            : '' ?>
+                    >
+                        <?= $value === 'WALK_IN'
+                            ? 'Walk-in'
+                            : 'Pickup' ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <div class="wh-field">
+            <label>Declared weight (kg)</label>
+
+            <input
+                type="number"
+                min="0"
+                step="0.01"
+                name="declaredWeight"
+                value="<?= wh_h($parcel['declaredWeight']) ?>"
+            >
+        </div>
+
+        <div class="wh-field">
+            <label>Dimensions</label>
+
+            <input
+                type="text"
+                maxlength="50"
+                name="dimensions"
+                placeholder="Example: 40x30x25"
+                value="<?= wh_h($parcel['dimensions']) ?>"
+            >
+        </div>
+
+        <div class="wh-field">
+            <label class="wh-check">
+
+                <input
+                    type="checkbox"
+                    name="isFragile"
+                    <?= $parcel['isFragile'] ? 'checked' : '' ?>
+                >
+
+                Fragile parcel
+
+            </label>
+        </div>
+
+        <div class="wh-field full">
+            <small>
+                Confirmed weight, storage location and parcel status
+                are managed through warehouse processing.
+            </small>
+        </div>
+
+        <div class="wh-form-actions">
+
+            <button class="wh-btn" type="submit">
+                Save changes
+            </button>
+
+            <a
+                class="wh-btn secondary"
+                href="view.php?id=<?= urlencode($id) ?>"
+            >
+                Cancel
+            </a>
+
+        </div>
+
     </form>
+
 </section>
+
 <?php wh_footer(); ?>
