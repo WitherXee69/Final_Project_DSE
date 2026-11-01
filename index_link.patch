@@ -1,0 +1,13 @@
+diff --git a/index.php b/index.php
+index aab9b6a..7130ee9 100644
+--- a/index.php
++++ b/index.php
+@@ -178,7 +178,7 @@ $staffRoles = [
+       <h1>Send it. Track it. <span>Delivered.</span></h1>
+       <p class="lead">One connected platform for pickups, parcels, warehouse, drivers and payments. Customers book and track online, and our teams run every step from a single system.</p>
+       <div class="hero-cta">
+-        <a href="<?= $isLoggedIn ? 'pickup_new.php' : 'register.php' ?>" class="btn btn-primary">
++        <a href="<?= $isLoggedIn ? 'customer/pickup_new.php' : 'register.php' ?>" class="btn btn-primary">
+           <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Request a Pickup
+         </a>
+         <a href="#portals" class="btn btn-ghost">Choose your portal</a>

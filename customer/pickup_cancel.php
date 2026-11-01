@@ -1,0 +1,10 @@
+<?php
+// CANCEL: POST only - permanently deletes the pickup and its parcel and receiver; no screen of its own
+require_once __DIR__ . '/_layout.php';
+$uid = cust_id();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: pickups.php'); exit; }
+cust_check_csrf();
+$id = (string)($_POST['id'] ?? '');
+if (cancelPickup($pdo, $id, $uid)) cust_flash('success', "Pickup $id has been cancelled and removed.");
+else cust_flash('error', 'This pickup can no longer be cancelled.');
+header('Location: pickups.php');
