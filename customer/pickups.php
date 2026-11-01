@@ -1,10 +1,9 @@
 <?php
-// READ (list): My pickups, with status tabs and search
+// READ (list): my pickups with parcel and receiver summary; status tabs and search
 require_once __DIR__ . '/_layout.php';
-require_once __DIR__ . '/pickup_functions.php';
 $uid     = cust_id();
-$status  = $_GET['status'] ?? '';
-$q       = trim($_GET['q'] ?? '');
+$status  = strtoupper((string)($_GET['status'] ?? ''));
+$q       = trim((string)($_GET['q'] ?? ''));
 $pickups = pickup_list($pdo, $uid, $status, $q);
 $counts  = pickup_counts($pdo, $uid);
 
@@ -26,27 +25,28 @@ cust_hero('PICKUP MANAGEMENT', 'My <span>pickups</span>',
 
       <form class="field cu-search" method="get">
         <?php if ($status): ?><input type="hidden" name="status" value="<?= cust_h($status) ?>"><?php endif; ?>
-        <input type="search" name="q" value="<?= cust_h($q) ?>" placeholder="Search by reference number or address">
+        <input type="search" name="q" value="<?= cust_h($q) ?>" placeholder="Search by reference, parcel, receiver or address">
         <button class="btn btn-primary" type="submit">Search</button>
         <?php if ($q || $status): ?><a class="btn btn-outline" href="pickups.php">Clear</a><?php endif; ?>
       </form>
 
       <?php if ($pickups): ?>
       <div class="cu-table-wrap"><table class="cu-table">
-        <thead><tr><th>Ref</th><th>Pickup date</th><th>Time window</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Ref</th><th>Pickup</th><th>Parcel</th><th>Receiver</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
         <?php foreach ($pickups as $p): ?>
           <tr>
             <td><strong><?= cust_h($p['pickupId']) ?></strong></td>
-            <td><?= cust_h($p['pickupDate']) ?></td>
-            <td><?= cust_h($p['preferredTimeWindow']) ?></td>
-            <td class="cu-addr"><?= cust_h($p['pickupAddress']) ?></td>
+            <td><?= cust_h($p['pickupDate'] ?: '–') ?><div class="cu-sub"><?= cust_h($p['preferredTimeWindow']) ?></div><div class="cu-sub cu-addr"><?= cust_h($p['pickupAddress']) ?></div></td>
+            <td><?= $p['parcelDescription'] ? cust_h($p['parcelDescription']) : '<span class="cu-sub">–</span>' ?>
+                <?php if ($p['parcelService']): ?><div class="cu-sub"><?= cust_h(SERVICE_LABELS[$p['parcelService']] ?? $p['parcelService']) ?></div><?php endif; ?></td>
+            <td><?= $p['receiverName'] ? cust_h($p['receiverName']) : '<span class="cu-sub">–</span>' ?></td>
             <td><span class="cu-badge cu-<?= cust_status_class($p['status']) ?>"><?= cust_h(pickup_label($p['status'])) ?></span></td>
             <td><div class="cu-row-actions">
               <a class="btn btn-outline cu-sm" href="pickup_view.php?id=<?= urlencode($p['pickupId']) ?>">View</a>
               <?php if (pickup_can_edit($p)): ?><a class="btn btn-outline cu-sm" href="pickup_edit.php?id=<?= urlencode($p['pickupId']) ?>">Edit</a><?php endif; ?>
               <?php if (pickup_can_cancel($p)): ?>
-                <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled and permanently deleted. This cannot be undone.">
+                <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled and permanently deleted, together with its parcel details and receiver. This cannot be undone.">
                   <input type="hidden" name="csrf_token" value="<?= cust_h(cust_csrf()) ?>">
                   <input type="hidden" name="id" value="<?= cust_h($p['pickupId']) ?>">
                   <button class="btn cu-sm cu-danger" type="submit">Cancel</button>

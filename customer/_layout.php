@@ -59,8 +59,8 @@ function cust_show_flash(): void {
 }
 
 function cust_status_class(string $s): string {
-    return [PK_REQUESTED => 'warning', PK_APPROVED => 'good', PK_ASSIGNED => 'good', PK_PICKED_UP => 'good',
-            PK_REJECTED => 'danger', PK_CANCELLED => 'danger', PK_FAILED => 'danger'][$s] ?? 'info';
+    return [PK_REQUESTED => 'warning', PK_APPROVED => 'good', PK_SCHEDULED => 'good', PK_COMPLETED => 'good',
+            PK_REJECTED => 'danger', PK_CANCELLED => 'danger', PK_FAILED => 'danger'][pickup_status($s)] ?? 'info';
 }
 
 
