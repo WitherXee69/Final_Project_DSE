@@ -1,4 +1,5 @@
 -- HELMS database schema (generated from FINAL_FIXED_RELATIONAL_SCHEMA)
+-- Updated: status/type/category columns converted to ENUMs.
 
 CREATE DATABASE IF NOT EXISTS HELMS;
 USE HELMS;
@@ -8,15 +9,17 @@ USE HELMS;
 -- User.adminId -> SystemAdmin.userId is added later via ALTER TABLE
 -- (User and SystemAdmin reference each other).
 CREATE TABLE User (
-    userId        INT AUTO_INCREMENT PRIMARY KEY,
+    userId        VARCHAR(20) PRIMARY KEY,
     username      VARCHAR(100) NOT NULL UNIQUE,
     passwordHash  VARCHAR(255) NOT NULL,
-    role          VARCHAR(50)  NOT NULL,
-    adminId       INT NULL
+    role          ENUM('CUSTOMER','FINANCE_OFFICER','FINANCE_MANAGER','CS_OFFICER',
+                       'CS_MANAGER','TRANSPORT_MANAGER','DRIVER','WAREHOUSE_OFFICER',
+                       'WAREHOUSE_MANAGER','MANAGING_DIRECTOR','SYSTEM_ADMIN') NOT NULL,
+    adminId       VARCHAR(20) NULL
 );
 
 CREATE TABLE SystemAdmin (
-    userId         INT PRIMARY KEY,
+    userId         VARCHAR(20) PRIMARY KEY,
     accessLevel    VARCHAR(50) NOT NULL,
     lastLoginDate  DATETIME NULL,
     FOREIGN KEY (userId) REFERENCES User(userId)
@@ -26,7 +29,7 @@ ALTER TABLE User
     ADD CONSTRAINT fk_user_admin FOREIGN KEY (adminId) REFERENCES SystemAdmin(userId);
 
 CREATE TABLE Warehouse (
-    warehouseId    INT AUTO_INCREMENT PRIMARY KEY,
+    warehouseId    VARCHAR(20) PRIMARY KEY,
     warehouseName  VARCHAR(150) NOT NULL,
     address        VARCHAR(255) NOT NULL,
     zoneCode       VARCHAR(20)  NOT NULL,
@@ -36,69 +39,69 @@ CREATE TABLE Warehouse (
 );
 
 CREATE TABLE CustomerServiceOfficer (
-    userId      INT PRIMARY KEY,
+    userId      VARCHAR(20) PRIMARY KEY,
     deskNumber  VARCHAR(20),
     shift       VARCHAR(30),
     FOREIGN KEY (userId) REFERENCES User(userId)
 );
 
 CREATE TABLE CustomerServiceManager (
-    userId      INT PRIMARY KEY,
+    userId      VARCHAR(20) PRIMARY KEY,
     region      VARCHAR(100),
     department  VARCHAR(100),
     FOREIGN KEY (userId) REFERENCES User(userId)
 );
 
 CREATE TABLE FinanceOfficer (
-    userId         INT PRIMARY KEY,
+    userId         VARCHAR(20) PRIMARY KEY,
     contactNumber  VARCHAR(30),
     shift          VARCHAR(30),
     FOREIGN KEY (userId) REFERENCES User(userId)
 );
 
 CREATE TABLE FinanceManager (
-    userId         INT PRIMARY KEY,
+    userId         VARCHAR(20) PRIMARY KEY,
     approvalLimit  DECIMAL(12,2),
     department     VARCHAR(100),
     FOREIGN KEY (userId) REFERENCES User(userId)
 );
 
 CREATE TABLE TransportManager (
-    userId        INT PRIMARY KEY,
+    userId        VARCHAR(20) PRIMARY KEY,
     region        VARCHAR(100),
     officeNumber  VARCHAR(20),
     FOREIGN KEY (userId) REFERENCES User(userId)
 );
 
 CREATE TABLE Driver (
-    userId          INT PRIMARY KEY,
+    userId          VARCHAR(20) PRIMARY KEY,
     licenseNumber   VARCHAR(50) NOT NULL UNIQUE,
     contactNumber   VARCHAR(30),
-    status          VARCHAR(30),
-    transportMgrId  INT NULL,
+    status          ENUM('AVAILABLE','ON_DUTY','OFF_DUTY'),
+    transportMgrId  VARCHAR(20) NULL,
     FOREIGN KEY (userId) REFERENCES User(userId),
     FOREIGN KEY (transportMgrId) REFERENCES TransportManager(userId)
 );
 
 CREATE TABLE WarehouseOfficer (
-    userId        INT PRIMARY KEY,
+    userId        VARCHAR(20) PRIMARY KEY,
     assignedZone  VARCHAR(20),
     shift         VARCHAR(30),
-    warehouseId   INT NULL,
+    warehouseId   VARCHAR(20) NULL,
     FOREIGN KEY (userId) REFERENCES User(userId),
     FOREIGN KEY (warehouseId) REFERENCES Warehouse(warehouseId)
 );
 
 CREATE TABLE WarehouseManager (
-    userId        INT PRIMARY KEY,
+    userId        VARCHAR(20) PRIMARY KEY,
     officeNumber  VARCHAR(20),
-    warehouseId   INT NULL,
+    warehouseId   VARCHAR(20) NULL,
     FOREIGN KEY (userId) REFERENCES User(userId),
     FOREIGN KEY (warehouseId) REFERENCES Warehouse(warehouseId)
 );
 
 CREATE TABLE ManagingDirector (
-    userId           INT PRIMARY KEY,
+    userId           VARCHAR(20) PRIMARY KEY,
     appointmentDate  DATE,
     officeNumber     VARCHAR(20),
     FOREIGN KEY (userId) REFERENCES User(userId)
@@ -107,7 +110,7 @@ CREATE TABLE ManagingDirector (
 -- 2. CUSTOMERS
 
 CREATE TABLE Customer (
-    userId         INT PRIMARY KEY,
+    userId         VARCHAR(20) PRIMARY KEY,
     contactNumber  VARCHAR(30),
     email          VARCHAR(150),
     address        VARCHAR(255),
@@ -115,19 +118,19 @@ CREATE TABLE Customer (
 );
 
 CREATE TABLE IndividualCustomer (
-    userId   INT PRIMARY KEY,
+    userId   VARCHAR(20) PRIMARY KEY,
     name     VARCHAR(150) NOT NULL,
     nic      VARCHAR(20),
-    csMgrId  INT NULL,
+    csMgrId  VARCHAR(20) NULL,
     FOREIGN KEY (userId) REFERENCES Customer(userId),
     FOREIGN KEY (csMgrId) REFERENCES CustomerServiceManager(userId)
 );
 
 CREATE TABLE CorporateCustomer (
-    userId         INT PRIMARY KEY,
+    userId         VARCHAR(20) PRIMARY KEY,
     companyName    VARCHAR(150) NOT NULL,
     contactPerson  VARCHAR(150),
-    csMgrId        INT NULL,
+    csMgrId        VARCHAR(20) NULL,
     FOREIGN KEY (userId) REFERENCES Customer(userId),
     FOREIGN KEY (csMgrId) REFERENCES CustomerServiceManager(userId)
 );
@@ -135,33 +138,33 @@ CREATE TABLE CorporateCustomer (
 -- 3. TRANSPORT: VEHICLES AND MANIFESTS
 
 CREATE TABLE Vehicle (
-    vehicleId           INT AUTO_INCREMENT PRIMARY KEY,
+    vehicleId           VARCHAR(20) PRIMARY KEY,
     registrationNumber  VARCHAR(30) NOT NULL UNIQUE,
-    vehicleType         VARCHAR(50),
+    vehicleType         ENUM('MOTORBIKE','VAN','TRUCK'),
     capacity            DECIMAL(10,2),
     isAvailable         BOOLEAN NOT NULL DEFAULT TRUE,
-    transportMgrId      INT NULL,
+    transportMgrId      VARCHAR(20) NULL,
     FOREIGN KEY (transportMgrId) REFERENCES TransportManager(userId)
 );
 
 CREATE TABLE DeliveryManifest (
-    deliveryManifestId  INT AUTO_INCREMENT PRIMARY KEY,
+    deliveryManifestId  VARCHAR(20) PRIMARY KEY,
     manifestDate        DATE NOT NULL,
     route               VARCHAR(255),
     manifestStatus      VARCHAR(30),
-    transportMgrId      INT NULL,
+    transportMgrId      VARCHAR(20) NULL,
     FOREIGN KEY (transportMgrId) REFERENCES TransportManager(userId)
 );
 
 CREATE TABLE DriverManifest (
-    driverManifestId    INT AUTO_INCREMENT PRIMARY KEY,
+    driverManifestId    VARCHAR(20) PRIMARY KEY,
     assignedDate        DATE NOT NULL,
     schedule            VARCHAR(255),
     status              VARCHAR(30),
-    transportMgrId      INT NULL,
-    driverId            INT NULL,
-    deliveryManifestId  INT NULL,
-    vehicleId           INT NULL,
+    transportMgrId      VARCHAR(20) NULL,
+    driverId            VARCHAR(20) NULL,
+    deliveryManifestId  VARCHAR(20) NULL,
+    vehicleId           VARCHAR(20) NULL,
     FOREIGN KEY (transportMgrId)     REFERENCES TransportManager(userId),
     FOREIGN KEY (driverId)           REFERENCES Driver(userId),
     FOREIGN KEY (deliveryManifestId) REFERENCES DeliveryManifest(deliveryManifestId),
@@ -171,19 +174,20 @@ CREATE TABLE DriverManifest (
 -- 4. PICKUPS, RECEIVERS, PARCELS
 
 CREATE TABLE Pickup (
-    pickupId             INT AUTO_INCREMENT PRIMARY KEY,
+    pickupId             VARCHAR(20) PRIMARY KEY,
     requestedAt          DATETIME NOT NULL,
     pickupDate           DATE,
     preferredTimeWindow  VARCHAR(50),
     pickupAddress        VARCHAR(255) NOT NULL,
-    status               VARCHAR(30),
+    status               ENUM('REQUESTED','APPROVED','REJECTED','ASSIGNED',
+                              'PICKED_UP','FAILED','CANCELLED'),
     rejectionReason      VARCHAR(255),
     failureReason        VARCHAR(255),
     cancelledAt          DATETIME NULL,
-    customerId           INT NOT NULL,
-    csoId                INT NULL,
-    transportMgrId       INT NULL,
-    driverManifestId     INT NULL,
+    customerId           VARCHAR(20) NOT NULL,
+    csoId                VARCHAR(20) NULL,
+    transportMgrId       VARCHAR(20) NULL,
+    driverManifestId     VARCHAR(20) NULL,
     FOREIGN KEY (customerId)       REFERENCES Customer(userId),
     FOREIGN KEY (csoId)            REFERENCES CustomerServiceOfficer(userId),
     FOREIGN KEY (transportMgrId)   REFERENCES TransportManager(userId),
@@ -191,7 +195,7 @@ CREATE TABLE Pickup (
 );
 
 CREATE TABLE Receiver (
-    receiverId       INT AUTO_INCREMENT PRIMARY KEY,
+    receiverId       VARCHAR(20) PRIMARY KEY,
     receiverName     VARCHAR(150) NOT NULL,
     receiverPhone    VARCHAR(30),
     receiverAddress  VARCHAR(255),
@@ -199,26 +203,30 @@ CREATE TABLE Receiver (
 );
 
 CREATE TABLE Parcel (
-    parcelId             INT AUTO_INCREMENT PRIMARY KEY,
+    parcelId             VARCHAR(20) PRIMARY KEY,
     description          VARCHAR(255),
-    parcelCategory       VARCHAR(50),
+    parcelCategory       ENUM('DOCUMENT','SMALL_PACKAGE','MEDIUM_PACKAGE',
+                              'LARGE_PACKAGE','BULKY_ITEM'),
     isFragile            BOOLEAN NOT NULL DEFAULT FALSE,
-    serviceType          VARCHAR(50),
-    intakeMethod         VARCHAR(50),
+    serviceType          ENUM('STANDARD','EXPRESS','SAME_DAY'),
+    intakeMethod         ENUM('PICKUP','WALK_IN'),
     declaredWeight       DECIMAL(10,2),
     confirmedWeight      DECIMAL(10,2),
     dimensions           VARCHAR(50),
     detailsConfirmed     BOOLEAN NOT NULL DEFAULT FALSE,
     parcelReceivedDate   DATE,
     storageLocationCode  VARCHAR(30),
-    status               VARCHAR(30),
+    status               ENUM('PENDING_PICKUP','RECEIVED_AT_WAREHOUSE','DETAILS_CONFIRMED',
+                              'PACKED','AWAITING_PAYMENT','READY_FOR_DISPATCH',
+                              'OUT_FOR_DELIVERY','DELIVERED','RETURNED_TO_WAREHOUSE',
+                              'RETURN_TO_SENDER','UNCLAIMED','RELEASED_TO_SENDER'),
     holdExpiresAt        DATETIME NULL,
     failureReason        VARCHAR(255),
-    customerId           INT NOT NULL,
-    receiverId           INT NOT NULL,
-    csoId                INT NULL,
-    pickupId             INT NULL,
-    warehouseId          INT NULL,
+    customerId           VARCHAR(20) NOT NULL,
+    receiverId           VARCHAR(20) NOT NULL,
+    csoId                VARCHAR(20) NULL,
+    pickupId             VARCHAR(20) NULL,
+    warehouseId          VARCHAR(20) NULL,
     FOREIGN KEY (customerId)  REFERENCES Customer(userId),
     FOREIGN KEY (receiverId)  REFERENCES Receiver(receiverId),
     FOREIGN KEY (csoId)       REFERENCES CustomerServiceOfficer(userId),
@@ -227,13 +235,13 @@ CREATE TABLE Parcel (
 );
 
 CREATE TABLE ReceiverLink (
-    linkId     INT AUTO_INCREMENT PRIMARY KEY,
+    linkId     VARCHAR(20) PRIMARY KEY,
     tokenHash  VARCHAR(255) NOT NULL,
     createdAt  DATETIME NOT NULL,
     expiresAt  DATETIME NOT NULL,
     isActive   BOOLEAN NOT NULL DEFAULT TRUE,
-    parcelId   INT NOT NULL,
-    csoId      INT NULL,
+    parcelId   VARCHAR(20) NOT NULL,
+    csoId      VARCHAR(20) NULL,
     FOREIGN KEY (parcelId) REFERENCES Parcel(parcelId),
     FOREIGN KEY (csoId)    REFERENCES CustomerServiceOfficer(userId)
 );
@@ -241,35 +249,36 @@ CREATE TABLE ReceiverLink (
 -- 5. POST-DELIVERY ISSUES, DELIVERIES
 
 CREATE TABLE PostDeliveryIssue (
-    issueId         INT AUTO_INCREMENT PRIMARY KEY,
-    issueType       VARCHAR(50),
+    issueId         VARCHAR(20) PRIMARY KEY,
+    issueType       ENUM('DAMAGED','WRONG_ITEM','MISSING_ITEMS','OTHER'),
     description     TEXT,
     submittedAt     DATETIME NOT NULL,
-    status          VARCHAR(30),
-    faultParty      VARCHAR(50),
-    decision        VARCHAR(50),
+    status          ENUM('OPEN','UNDER_REVIEW','RESOLVED'),
+    faultParty      ENUM('COMPANY','SENDER'),
+    decision        ENUM('RETURN_TO_SENDER','NO_FAULT_REJECTED'),
     decisionNotes   TEXT,
     decidedAt       DATETIME NULL,
-    receiverLinkId  INT NULL,
-    csMgrId         INT NULL,
+    receiverLinkId  VARCHAR(20) NULL,
+    csMgrId         VARCHAR(20) NULL,
     FOREIGN KEY (receiverLinkId) REFERENCES ReceiverLink(linkId),
     FOREIGN KEY (csMgrId)        REFERENCES CustomerServiceManager(userId)
 );
 
 CREATE TABLE Delivery (
-    deliveryId          INT AUTO_INCREMENT PRIMARY KEY,
-    direction           VARCHAR(30),
+    deliveryId          VARCHAR(20) PRIMARY KEY,
+    direction           ENUM('OUTBOUND','RETURN'),
     deliveryAddress     VARCHAR(255),
     deliveryDate        DATE,
     estimatedFrom       DATETIME,
     estimatedTo         DATETIME,
-    status              VARCHAR(30),
+    status              ENUM('SCHEDULED','OUT_FOR_DELIVERY','ARRIVED','DELIVERED',
+                             'ATTEMPT_FAILED','RETURNED_TO_WAREHOUSE','FAILED_FINAL'),
     failedAttemptCount  INT NOT NULL DEFAULT 0,
     returnCostBearer    VARCHAR(30),
-    parcelId            INT NOT NULL,
-    deliveryManifestId  INT NULL,
-    driverManifestId    INT NULL,
-    issueId             INT NULL,
+    parcelId            VARCHAR(20) NOT NULL,
+    deliveryManifestId  VARCHAR(20) NULL,
+    driverManifestId    VARCHAR(20) NULL,
+    issueId             VARCHAR(20) NULL,
     FOREIGN KEY (parcelId)           REFERENCES Parcel(parcelId),
     FOREIGN KEY (deliveryManifestId) REFERENCES DeliveryManifest(deliveryManifestId),
     FOREIGN KEY (driverManifestId)   REFERENCES DriverManifest(driverManifestId),
@@ -277,45 +286,48 @@ CREATE TABLE Delivery (
 );
 
 CREATE TABLE DeliveryAttempt (
-    attemptId      INT AUTO_INCREMENT PRIMARY KEY,
+    attemptId      VARCHAR(20) PRIMARY KEY,
     attemptNumber  INT NOT NULL,
     attemptedAt    DATETIME,
     arrivedAt      DATETIME,
-    outcome        VARCHAR(30),
+    outcome        ENUM('SUCCESS','RECEIVER_ABSENT','PIN_FAILED','OTHER'),
     failureReason  VARCHAR(255),
     nextAttemptAt  DATETIME NULL,
-    deliveryId     INT NOT NULL,
+    deliveryId     VARCHAR(20) NOT NULL,
     FOREIGN KEY (deliveryId) REFERENCES Delivery(deliveryId)
 );
 
 CREATE TABLE DeliveryVerification (
-    verificationId  INT AUTO_INCREMENT PRIMARY KEY,
+    verificationId  VARCHAR(20) PRIMARY KEY,
     pinHash         VARCHAR(255) NOT NULL,
     generatedAt     DATETIME NOT NULL,
     expiresAt       DATETIME NOT NULL,
     verifiedAt      DATETIME NULL,
     attemptCount    INT NOT NULL DEFAULT 0,
-    status          VARCHAR(30),
-    attemptId       INT NULL,
-    receiverLinkId  INT NULL,
+    status          ENUM('ACTIVE','VERIFIED','EXPIRED','LOCKED'),
+    attemptId       VARCHAR(20) NULL,
+    receiverLinkId  VARCHAR(20) NULL,
     FOREIGN KEY (attemptId)      REFERENCES DeliveryAttempt(attemptId),
     FOREIGN KEY (receiverLinkId) REFERENCES ReceiverLink(linkId)
 );
 
 -- actorId is polymorphic (depends on actorType), so it has no FK.
 CREATE TABLE TrackingEvent (
-    eventId              INT AUTO_INCREMENT PRIMARY KEY,
-    eventType            VARCHAR(50) NOT NULL,
+    eventId              VARCHAR(20) PRIMARY KEY,
+    eventType            ENUM('PICKED_UP','RECEIVED_AT_WAREHOUSE','DETAILS_CONFIRMED',
+                              'PACKED','READY_FOR_DISPATCH','OUT_FOR_DELIVERY','ARRIVED',
+                              'DELIVERY_FAILED','DELIVERED','RETURNED_TO_WAREHOUSE',
+                              'RETURN_TO_SENDER','RELEASED_TO_SENDER') NOT NULL,
     occurredAt           DATETIME NOT NULL,
     locationDescription  VARCHAR(255),
     remarks              VARCHAR(255),
     isVisibleToReceiver  BOOLEAN NOT NULL DEFAULT TRUE,
     actorType            VARCHAR(50),
-    actorId              INT NULL,
-    parcelId             INT NULL,
-    receiverLinkId       INT NULL,
-    deliveryId           INT NULL,
-    warehouseId          INT NULL,
+    actorId              VARCHAR(20) NULL,
+    parcelId             VARCHAR(20) NULL,
+    receiverLinkId       VARCHAR(20) NULL,
+    deliveryId           VARCHAR(20) NULL,
+    warehouseId          VARCHAR(20) NULL,
     FOREIGN KEY (parcelId)       REFERENCES Parcel(parcelId),
     FOREIGN KEY (receiverLinkId) REFERENCES ReceiverLink(linkId),
     FOREIGN KEY (deliveryId)     REFERENCES Delivery(deliveryId),
@@ -325,18 +337,18 @@ CREATE TABLE TrackingEvent (
 -- 6. PRICING
 
 CREATE TABLE CostEstimate (
-    estimateId     INT AUTO_INCREMENT PRIMARY KEY,
+    estimateId     VARCHAR(20) PRIMARY KEY,
     baseCharge     DECIMAL(12,2) NOT NULL,
     surcharges     DECIMAL(12,2) NOT NULL DEFAULT 0,
     totalEstimate  DECIMAL(12,2) NOT NULL,
     calculatedAt   DATETIME NOT NULL,
-    pickupId       INT NULL,
+    pickupId       VARCHAR(20) NULL,
     FOREIGN KEY (pickupId) REFERENCES Pickup(pickupId)
 );
 
 CREATE TABLE PricingRule (
-    ruleId              INT AUTO_INCREMENT PRIMARY KEY,
-    serviceType         VARCHAR(50),
+    ruleId              VARCHAR(20) PRIMARY KEY,
+    serviceType         ENUM('STANDARD','EXPRESS','SAME_DAY'),
     zoneCode            VARCHAR(20),
     minWeight           DECIMAL(10,2),
     maxWeight           DECIMAL(10,2),
@@ -350,16 +362,16 @@ CREATE TABLE PricingRule (
 );
 
 CREATE TABLE ParcelPricingRule (
-    parcelId  INT NOT NULL,
-    ruleId    INT NOT NULL,
+    parcelId  VARCHAR(20) NOT NULL,
+    ruleId    VARCHAR(20) NOT NULL,
     PRIMARY KEY (parcelId, ruleId),
     FOREIGN KEY (parcelId) REFERENCES Parcel(parcelId),
     FOREIGN KEY (ruleId)   REFERENCES PricingRule(ruleId)
 );
 
 CREATE TABLE CostEstimatePricingRule (
-    estimateId  INT NOT NULL,
-    ruleId      INT NOT NULL,
+    estimateId  VARCHAR(20) NOT NULL,
+    ruleId      VARCHAR(20) NOT NULL,
     PRIMARY KEY (estimateId, ruleId),
     FOREIGN KEY (estimateId) REFERENCES CostEstimate(estimateId),
     FOREIGN KEY (ruleId)     REFERENCES PricingRule(ruleId)
@@ -368,22 +380,22 @@ CREATE TABLE CostEstimatePricingRule (
 -- 7. CORPORATE AGREEMENTS
 
 CREATE TABLE CorporateAgreement (
-    agreementId          INT AUTO_INCREMENT PRIMARY KEY,
+    agreementId          VARCHAR(20) PRIMARY KEY,
     startDate            DATE NOT NULL,
     endDate              DATE,
     terms                TEXT,
     discountRate         DECIMAL(5,2),
     paymentTerms         VARCHAR(100),
     status               VARCHAR(30),
-    corporateCustomerId  INT NOT NULL,
-    financeMgrId         INT NULL,
+    corporateCustomerId  VARCHAR(20) NOT NULL,
+    financeMgrId         VARCHAR(20) NULL,
     FOREIGN KEY (corporateCustomerId) REFERENCES CorporateCustomer(userId),
     FOREIGN KEY (financeMgrId)        REFERENCES FinanceManager(userId)
 );
 
 CREATE TABLE CSManagerViewsAgreement (
-    csManagerId  INT NOT NULL,
-    agreementId  INT NOT NULL,
+    csManagerId  VARCHAR(20) NOT NULL,
+    agreementId  VARCHAR(20) NOT NULL,
     PRIMARY KEY (csManagerId, agreementId),
     FOREIGN KEY (csManagerId) REFERENCES CustomerServiceManager(userId),
     FOREIGN KEY (agreementId) REFERENCES CorporateAgreement(agreementId)
@@ -392,78 +404,79 @@ CREATE TABLE CSManagerViewsAgreement (
 -- 8. BILLING: INVOICES, PAYMENTS, RECEIPTS, REFUNDS
 
 CREATE TABLE Invoice (
-    invoiceId    INT AUTO_INCREMENT PRIMARY KEY,
+    invoiceId    VARCHAR(20) PRIMARY KEY,
     invoiceDate  DATE NOT NULL,
     dueDate      DATE,
     sourceType   VARCHAR(50),
     subtotal     DECIMAL(12,2) NOT NULL,
     taxAmount    DECIMAL(12,2) NOT NULL DEFAULT 0,
     totalAmount  DECIMAL(12,2) NOT NULL,
-    status       VARCHAR(30),
+    status       ENUM('UNPAID','PAID','REFUNDED','VOID'),
     sentAt       DATETIME NULL,
-    customerId   INT NOT NULL,
-    csoId        INT NULL,
-    deliveryId   INT NULL,
+    customerId   VARCHAR(20) NOT NULL,
+    csoId        VARCHAR(20) NULL,
+    deliveryId   VARCHAR(20) NULL,
     FOREIGN KEY (customerId) REFERENCES Customer(userId),
     FOREIGN KEY (csoId)      REFERENCES CustomerServiceOfficer(userId),
     FOREIGN KEY (deliveryId) REFERENCES Delivery(deliveryId)
 );
 
 CREATE TABLE FinanceOfficerViewsInvoice (
-    financeOfficerId  INT NOT NULL,
-    invoiceId         INT NOT NULL,
+    financeOfficerId  VARCHAR(20) NOT NULL,
+    invoiceId         VARCHAR(20) NOT NULL,
     PRIMARY KEY (financeOfficerId, invoiceId),
     FOREIGN KEY (financeOfficerId) REFERENCES FinanceOfficer(userId),
     FOREIGN KEY (invoiceId)        REFERENCES Invoice(invoiceId)
 );
 
 CREATE TABLE Payment (
-    paymentId         INT AUTO_INCREMENT PRIMARY KEY,
+    paymentId         VARCHAR(20) PRIMARY KEY,
     amount            DECIMAL(12,2) NOT NULL,
     paymentDate       DATE NOT NULL,
-    paymentMethod     VARCHAR(50),
+    paymentMethod     ENUM('CARD_ONLINE','CASH_COUNTER'),
     transactionRef    VARCHAR(100),
-    invoiceId         INT NOT NULL,
-    financeOfficerId  INT NULL,
+    invoiceId         VARCHAR(20) NOT NULL,
+    financeOfficerId  VARCHAR(20) NULL,
     FOREIGN KEY (invoiceId)        REFERENCES Invoice(invoiceId),
     FOREIGN KEY (financeOfficerId) REFERENCES FinanceOfficer(userId)
 );
 
 CREATE TABLE Receipt (
-    receiptId   INT AUTO_INCREMENT PRIMARY KEY,
+    receiptId   VARCHAR(20) PRIMARY KEY,
     issuedDate  DATE NOT NULL,
     amount      DECIMAL(12,2) NOT NULL,
-    paymentId   INT NOT NULL,
-    customerId  INT NOT NULL,
+    paymentId   VARCHAR(20) NOT NULL,
+    customerId  VARCHAR(20) NOT NULL,
     FOREIGN KEY (paymentId)  REFERENCES Payment(paymentId),
     FOREIGN KEY (customerId) REFERENCES Customer(userId)
 );
 
 CREATE TABLE Refund (
-    refundId             INT AUTO_INCREMENT PRIMARY KEY,
-    refundReason         VARCHAR(255),
+    refundId             VARCHAR(20) PRIMARY KEY,
+    refundReason         ENUM('DELIVERY_FAILED','COMPANY_FAULT_COMPLAINT'),
     originalAmount       DECIMAL(12,2),
     attemptCount         INT,
     returnCost           DECIMAL(12,2),
-    returnOption         VARCHAR(50),
+    returnOption         ENUM('COLLECT_FROM_WAREHOUSE','DELIVER_TO_SENDER') NULL,
     returnDeliveryFee    DECIMAL(12,2),
-    refundMethod         VARCHAR(50),
+    refundMethod         ENUM('BANK_TRANSFER','CASH_COLLECTION','PAYMENT_REVERSAL'),
     collectionBranch     VARCHAR(100),
     requestedAt          DATETIME NOT NULL,
     expiresAt            DATETIME NULL,
     expiryNotifiedAt     DATETIME NULL,
     expiryAcknowledged   BOOLEAN NOT NULL DEFAULT FALSE,
     processedAt          DATETIME NULL,
-    status               VARCHAR(30),
+    status               ENUM('REQUESTED','SUBMITTED','VERIFIED','PROCESSED',
+                              'REJECTED','EXPIRED'),
     accountHolderName    VARCHAR(150),
     bankName             VARCHAR(100),
     branchName           VARCHAR(100),
     accountNumber        VARCHAR(50),
-    customerId           INT NOT NULL,
-    paymentId            INT NULL,
-    parcelId             INT NULL,
-    financeMgrId         INT NULL,
-    issueId              INT NULL,
+    customerId           VARCHAR(20) NOT NULL,
+    paymentId            VARCHAR(20) NULL,
+    parcelId             VARCHAR(20) NULL,
+    financeMgrId         VARCHAR(20) NULL,
+    issueId              VARCHAR(20) NULL,
     FOREIGN KEY (customerId)   REFERENCES Customer(userId),
     FOREIGN KEY (paymentId)    REFERENCES Payment(paymentId),
     FOREIGN KEY (parcelId)     REFERENCES Parcel(parcelId),
@@ -474,15 +487,17 @@ CREATE TABLE Refund (
 -- 9. NOTIFICATIONS
 
 CREATE TABLE Notification (
-    notificationId     INT AUTO_INCREMENT PRIMARY KEY,
-    notificationType   VARCHAR(50),
+    notificationId     VARCHAR(20) PRIMARY KEY,
+    notificationType   ENUM('INVOICE_SENT','PICKUP_APPROVED','PICKUP_REJECTED',
+                            'PICKUP_FAILED','REFUND_FORM','REFUND_EXPIRY_NOTICE',
+                            'RECEIVER_LINK'),
     channel            VARCHAR(30),
     recipientContact   VARCHAR(150),
     content            TEXT,
     sentAt             DATETIME NULL,
     status             VARCHAR(30),
-    customerId         INT NULL,
-    receiverLinkId     INT NULL,
+    customerId         VARCHAR(20) NULL,
+    receiverLinkId     VARCHAR(20) NULL,
     FOREIGN KEY (customerId)     REFERENCES Customer(userId),
     FOREIGN KEY (receiverLinkId) REFERENCES ReceiverLink(linkId)
 );
@@ -490,80 +505,80 @@ CREATE TABLE Notification (
 -- 10. REPORTS
 
 CREATE TABLE PaymentReport (
-    reportId            INT AUTO_INCREMENT PRIMARY KEY,
+    reportId            VARCHAR(20) PRIMARY KEY,
     generatedAt         DATETIME NOT NULL,
     periodStart         DATE NOT NULL,
     periodEnd           DATE NOT NULL,
     totalCollected      DECIMAL(14,2),
     totalRefunded       DECIMAL(14,2),
     expiredRefundTotal  DECIMAL(14,2),
-    financeMgrId        INT NULL,
+    financeMgrId        VARCHAR(20) NULL,
     FOREIGN KEY (financeMgrId) REFERENCES FinanceManager(userId)
 );
 
 CREATE TABLE DeliveryReport (
-    reportId          INT AUTO_INCREMENT PRIMARY KEY,
+    reportId          VARCHAR(20) PRIMARY KEY,
     generatedAt       DATETIME NOT NULL,
     periodStart       DATE NOT NULL,
     periodEnd         DATE NOT NULL,
     totalDeliveries   INT,
     failedDeliveries  INT,
     returnedParcels   INT,
-    transportMgrId    INT NULL,
+    transportMgrId    VARCHAR(20) NULL,
     FOREIGN KEY (transportMgrId) REFERENCES TransportManager(userId)
 );
 
 CREATE TABLE StorageReport (
-    reportId             INT AUTO_INCREMENT PRIMARY KEY,
+    reportId             VARCHAR(20) PRIMARY KEY,
     generatedAt          DATETIME NOT NULL,
     periodStart          DATE NOT NULL,
     periodEnd            DATE NOT NULL,
     parcelsStored        INT,
     unclaimedParcels     INT,
     capacityUtilisation  DECIMAL(5,2),
-    warehouseMgrId       INT NULL,
+    warehouseMgrId       VARCHAR(20) NULL,
     FOREIGN KEY (warehouseMgrId) REFERENCES WarehouseManager(userId)
 );
 
 CREATE TABLE CustomerReport (
-    reportId           INT AUTO_INCREMENT PRIMARY KEY,
+    reportId           VARCHAR(20) PRIMARY KEY,
     generatedAt        DATETIME NOT NULL,
     periodStart        DATE NOT NULL,
     periodEnd          DATE NOT NULL,
     newCustomers       INT,
     activeCustomers    INT,
     corporateCustomers INT,
-    csMgrId            INT NULL,
+    csMgrId            VARCHAR(20) NULL,
     FOREIGN KEY (csMgrId) REFERENCES CustomerServiceManager(userId)
 );
 
 CREATE TABLE MDViewsPaymentReport (
-    directorId  INT NOT NULL,
-    reportId    INT NOT NULL,
+    directorId  VARCHAR(20) NOT NULL,
+    reportId    VARCHAR(20) NOT NULL,
     PRIMARY KEY (directorId, reportId),
     FOREIGN KEY (directorId) REFERENCES ManagingDirector(userId),
     FOREIGN KEY (reportId)   REFERENCES PaymentReport(reportId)
 );
 
 CREATE TABLE MDViewsDeliveryReport (
-    directorId  INT NOT NULL,
-    reportId    INT NOT NULL,
+    directorId  VARCHAR(20) NOT NULL,
+    reportId    VARCHAR(20) NOT NULL,
     PRIMARY KEY (directorId, reportId),
     FOREIGN KEY (directorId) REFERENCES ManagingDirector(userId),
     FOREIGN KEY (reportId)   REFERENCES DeliveryReport(reportId)
 );
 
 CREATE TABLE MDViewsStorageReport (
-    directorId  INT NOT NULL,
-    reportId    INT NOT NULL,
+    directorId  VARCHAR(20) NOT NULL,
+    reportId    VARCHAR(20) NOT NULL,
     PRIMARY KEY (directorId, reportId),
     FOREIGN KEY (directorId) REFERENCES ManagingDirector(userId),
     FOREIGN KEY (reportId)   REFERENCES StorageReport(reportId)
 );
 
 CREATE TABLE MDViewsCustomerReport (
-    directorId  INT NOT NULL,
-    reportId    INT NOT NULL,
+    directorId  VARCHAR(20) NOT NULL,
+    reportId    VARCHAR(20) NOT NULL,
     PRIMARY KEY (directorId, reportId),
     FOREIGN KEY (directorId) REFERENCES ManagingDirector(userId),
     FOREIGN KEY (reportId)   REFERENCES CustomerReport(reportId)
@@ -572,9 +587,232 @@ CREATE TABLE MDViewsCustomerReport (
 -- 11. WAREHOUSE OFFICER <-> PARCEL
 
 CREATE TABLE WarehouseOfficerHandlesParcel (
-    warehouseOfficerId  INT NOT NULL,
-    parcelId            INT NOT NULL,
+    warehouseOfficerId  VARCHAR(20) NOT NULL,
+    parcelId            VARCHAR(20) NOT NULL,
     PRIMARY KEY (warehouseOfficerId, parcelId),
     FOREIGN KEY (warehouseOfficerId) REFERENCES WarehouseOfficer(userId),
     FOREIGN KEY (parcelId)           REFERENCES Parcel(parcelId)
 );
+
+-- =====================================================================
+-- DUMMY DATA (remapped to the enum values)
+-- ID formats: USR-000001, WH-001, VEH-001, PCK-2026-000051,
+--             HEN-2026-000123 (parcels), RCV-000001, DLV-2026-000201 ...
+-- Password hashes are placeholders (not real bcrypt hashes).
+-- =====================================================================
+
+-- Users (adminId filled in after SystemAdmin exists)
+INSERT INTO User (userId, username, passwordHash, role, adminId) VALUES
+('USR-000001','admin.perera','$2b$10$dummyhash000000000000000000000000000000000000000001','SYSTEM_ADMIN',NULL),
+('USR-000002','md.fernando','$2b$10$dummyhash000000000000000000000000000000000000000002','MANAGING_DIRECTOR',NULL),
+('USR-000003','csm.silva','$2b$10$dummyhash000000000000000000000000000000000000000003','CS_MANAGER',NULL),
+('USR-000004','cso.nadeesha','$2b$10$dummyhash000000000000000000000000000000000000000004','CS_OFFICER',NULL),
+('USR-000005','cso.kasun','$2b$10$dummyhash000000000000000000000000000000000000000005','CS_OFFICER',NULL),
+('USR-000006','fm.jayawardena','$2b$10$dummyhash000000000000000000000000000000000000000006','FINANCE_MANAGER',NULL),
+('USR-000007','fo.dilini','$2b$10$dummyhash000000000000000000000000000000000000000007','FINANCE_OFFICER',NULL),
+('USR-000008','tm.bandara','$2b$10$dummyhash000000000000000000000000000000000000000008','TRANSPORT_MANAGER',NULL),
+('USR-000009','drv.sunil','$2b$10$dummyhash000000000000000000000000000000000000000009','DRIVER',NULL),
+('USR-000010','drv.ruwan','$2b$10$dummyhash000000000000000000000000000000000000000010','DRIVER',NULL),
+('USR-000011','wm.gunawardena','$2b$10$dummyhash000000000000000000000000000000000000000011','WAREHOUSE_MANAGER',NULL),
+('USR-000012','wo.thilina','$2b$10$dummyhash000000000000000000000000000000000000000012','WAREHOUSE_OFFICER',NULL),
+('USR-000013','amal.rathnayake','$2b$10$dummyhash000000000000000000000000000000000000000013','CUSTOMER',NULL),
+('USR-000014','sachini.wijesinghe','$2b$10$dummyhash000000000000000000000000000000000000000014','CUSTOMER',NULL),
+('USR-000015','lankatea.orders','$2b$10$dummyhash000000000000000000000000000000000000000015','CUSTOMER',NULL);
+
+INSERT INTO SystemAdmin (userId, accessLevel, lastLoginDate) VALUES
+('USR-000001','FULL','2026-10-30 08:45:00');
+
+UPDATE User SET adminId = 'USR-000001';
+
+INSERT INTO Warehouse (warehouseId, warehouseName, address, zoneCode, status, capacity, currentLoad) VALUES
+('WH-001','Colombo Central Hub','45 Baseline Road, Colombo 09','CMB-01','ACTIVE',5000,1240),
+('WH-002','Kandy Regional Depot','12 Peradeniya Road, Kandy','KDY-01','ACTIVE',2000,310);
+
+INSERT INTO CustomerServiceOfficer (userId, deskNumber, shift) VALUES
+('USR-000004','D-04','MORNING'),
+('USR-000005','D-05','EVENING');
+
+INSERT INTO CustomerServiceManager (userId, region, department) VALUES
+('USR-000003','Western Province','Customer Service');
+
+INSERT INTO FinanceOfficer (userId, contactNumber, shift) VALUES
+('USR-000007','+94112345007','DAY');
+
+INSERT INTO FinanceManager (userId, approvalLimit, department) VALUES
+('USR-000006',500000.00,'Finance');
+
+INSERT INTO TransportManager (userId, region, officeNumber) VALUES
+('USR-000008','Western Province','T-101');
+
+INSERT INTO Driver (userId, licenseNumber, contactNumber, status, transportMgrId) VALUES
+('USR-000009','B1234567','+94771110009','ON_DUTY','USR-000008'),
+('USR-000010','B7654321','+94771110010','AVAILABLE','USR-000008');
+
+INSERT INTO WarehouseOfficer (userId, assignedZone, shift, warehouseId) VALUES
+('USR-000012','CMB-01','MORNING','WH-001');
+
+INSERT INTO WarehouseManager (userId, officeNumber, warehouseId) VALUES
+('USR-000011','W-201','WH-001');
+
+INSERT INTO ManagingDirector (userId, appointmentDate, officeNumber) VALUES
+('USR-000002','2022-01-15','MD-001');
+
+-- Customers
+INSERT INTO Customer (userId, contactNumber, email, address) VALUES
+('USR-000013','+94771234013','amal.r@example.com','23 Galle Road, Dehiwala'),
+('USR-000014','+94771234014','sachini.w@example.com','78 Temple Road, Mount Lavinia'),
+('USR-000015','+94112223015','orders@lankatea.example.com','100 Duke Street, Colombo 01');
+
+INSERT INTO IndividualCustomer (userId, name, nic, csMgrId) VALUES
+('USR-000013','Amal Rathnayake','199012345678','USR-000003'),
+('USR-000014','Sachini Wijesinghe','199545678912','USR-000003');
+
+INSERT INTO CorporateCustomer (userId, companyName, contactPerson, csMgrId) VALUES
+('USR-000015','Lanka Tea Exporters (Pvt) Ltd','Nimal Herath','USR-000003');
+
+-- Transport
+INSERT INTO Vehicle (vehicleId, registrationNumber, vehicleType, capacity, isAvailable, transportMgrId) VALUES
+('VEH-001','WP CAB-1234','VAN',800.00,FALSE,'USR-000008'),
+('VEH-002','WP KL-5678','TRUCK',3000.00,TRUE,'USR-000008'),
+('VEH-003','WP BDF-9012','MOTORBIKE',50.00,TRUE,'USR-000008');
+
+INSERT INTO DeliveryManifest (deliveryManifestId, manifestDate, route, manifestStatus, transportMgrId) VALUES
+('DM-2026-000001','2026-10-30','Colombo Central - Dehiwala - Mount Lavinia','COMPLETED','USR-000008'),
+('DM-2026-000002','2026-11-01','Colombo Central - Kandy','IN_PROGRESS','USR-000008');
+
+INSERT INTO DriverManifest (driverManifestId, assignedDate, schedule, status, transportMgrId, driverId, deliveryManifestId, vehicleId) VALUES
+('DRM-2026-000001','2026-10-30','08:00-16:00','COMPLETED','USR-000008','USR-000009','DM-2026-000001','VEH-001'),
+('DRM-2026-000002','2026-11-01','07:00-17:00','IN_PROGRESS','USR-000008','USR-000010','DM-2026-000002','VEH-002');
+
+-- Pickups (COMPLETED -> PICKED_UP)
+INSERT INTO Pickup (pickupId, requestedAt, pickupDate, preferredTimeWindow, pickupAddress, status, rejectionReason, failureReason, cancelledAt, customerId, csoId, transportMgrId, driverManifestId) VALUES
+('PCK-2026-000051','2026-10-27 09:15:00','2026-10-28','09:00-12:00','23 Galle Road, Dehiwala','PICKED_UP',NULL,NULL,NULL,'USR-000013','USR-000004','USR-000008','DRM-2026-000001'),
+('PCK-2026-000052','2026-10-28 14:30:00','2026-10-29','13:00-16:00','78 Temple Road, Mount Lavinia','PICKED_UP',NULL,NULL,NULL,'USR-000014','USR-000004','USR-000008','DRM-2026-000001'),
+('PCK-2026-000053','2026-10-29 10:00:00','2026-10-31','09:00-12:00','100 Duke Street, Colombo 01','PICKED_UP',NULL,NULL,NULL,'USR-000015','USR-000005','USR-000008','DRM-2026-000002'),
+('PCK-2026-000054','2026-10-30 16:45:00',NULL,'09:00-12:00','23 Galle Road, Dehiwala','REJECTED','Address outside service zone',NULL,NULL,'USR-000013','USR-000005',NULL,NULL),
+('PCK-2026-000055','2026-10-31 11:20:00',NULL,'13:00-16:00','78 Temple Road, Mount Lavinia','CANCELLED',NULL,NULL,'2026-10-31 15:00:00','USR-000014','USR-000004',NULL,NULL);
+
+-- Receivers
+INSERT INTO Receiver (receiverId, receiverName, receiverPhone, receiverAddress, zoneCode) VALUES
+('RCV-000001','Kamal Dissanayake','+94712223301','15 Lake Road, Kandy','KDY-01'),
+('RCV-000002','Priya Mendis','+94712223302','9 Hospital Road, Galle','GLE-01'),
+('RCV-000003','Ishara Fonseka','+94712223303','67 Beach Road, Negombo','NGB-01');
+
+-- Parcels
+-- category: HOUSEHOLD/COMMERCIAL -> MEDIUM_PACKAGE, PERSONAL -> SMALL_PACKAGE
+-- status:   IN_TRANSIT/FAILED_DELIVERY -> OUT_FOR_DELIVERY, IN_WAREHOUSE -> DETAILS_CONFIRMED
+INSERT INTO Parcel (parcelId, description, parcelCategory, isFragile, serviceType, intakeMethod, declaredWeight, confirmedWeight, dimensions, detailsConfirmed, parcelReceivedDate, storageLocationCode, status, holdExpiresAt, failureReason, customerId, receiverId, csoId, pickupId, warehouseId) VALUES
+('HEN-2026-000123','Ceramic tableware set','MEDIUM_PACKAGE',TRUE,'EXPRESS','PICKUP',4.50,4.70,'40x30x25',TRUE,'2026-10-28','A-03-12','DELIVERED',NULL,NULL,'USR-000013','RCV-000001','USR-000004','PCK-2026-000051','WH-001'),
+('HEN-2026-000124','Legal documents','DOCUMENT',FALSE,'STANDARD','PICKUP',0.50,0.45,'35x25x5',TRUE,'2026-10-29','B-01-04','OUT_FOR_DELIVERY',NULL,NULL,'USR-000014','RCV-000002','USR-000004','PCK-2026-000052','WH-001'),
+('HEN-2026-000125','Tea packs - export samples','MEDIUM_PACKAGE',FALSE,'STANDARD','PICKUP',12.00,12.30,'50x40x30',TRUE,'2026-10-31','C-02-07','OUT_FOR_DELIVERY',NULL,'Receiver not available','USR-000015','RCV-000003','USR-000005','PCK-2026-000053','WH-001'),
+('HEN-2026-000126','Handmade leather bag','SMALL_PACKAGE',FALSE,'STANDARD','WALK_IN',1.80,1.80,'38x28x12',TRUE,'2026-11-01','A-01-02','DETAILS_CONFIRMED','2026-11-04 17:00:00',NULL,'USR-000013','RCV-000001','USR-000005',NULL,'WH-001');
+
+INSERT INTO ReceiverLink (linkId, tokenHash, createdAt, expiresAt, isActive, parcelId, csoId) VALUES
+('LNK-000001','$2b$10$dummytoken0000000000000000000000000000000000000000001','2026-10-28 12:00:00','2026-11-28 12:00:00',TRUE,'HEN-2026-000123','USR-000004'),
+('LNK-000002','$2b$10$dummytoken0000000000000000000000000000000000000000002','2026-10-29 16:30:00','2026-11-29 16:30:00',TRUE,'HEN-2026-000124','USR-000004'),
+('LNK-000003','$2b$10$dummytoken0000000000000000000000000000000000000000003','2026-10-31 13:00:00','2026-11-30 13:00:00',TRUE,'HEN-2026-000125','USR-000005');
+
+-- Post-delivery issue
+-- faultParty CARRIER -> COMPANY. decision left NULL: the decision enum only has
+-- RETURN_TO_SENDER / NO_FAULT_REJECTED; a company-fault refund is handled via the Refund record.
+INSERT INTO PostDeliveryIssue (issueId, issueType, description, submittedAt, status, faultParty, decision, decisionNotes, decidedAt, receiverLinkId, csMgrId) VALUES
+('ISS-2026-000001','DAMAGED','Two plates arrived cracked.','2026-10-31 10:15:00','RESOLVED','COMPANY',NULL,'Packaging photos confirm transit damage; refund approved.','2026-10-31 15:40:00','LNK-000001','USR-000003');
+
+-- Deliveries (IN_TRANSIT -> OUT_FOR_DELIVERY, FAILED -> ATTEMPT_FAILED)
+INSERT INTO Delivery (deliveryId, direction, deliveryAddress, deliveryDate, estimatedFrom, estimatedTo, status, failedAttemptCount, returnCostBearer, parcelId, deliveryManifestId, driverManifestId, issueId) VALUES
+('DLV-2026-000201','OUTBOUND','15 Lake Road, Kandy','2026-10-30','2026-10-30 10:00:00','2026-10-30 14:00:00','DELIVERED',0,NULL,'HEN-2026-000123','DM-2026-000001','DRM-2026-000001','ISS-2026-000001'),
+('DLV-2026-000202','OUTBOUND','9 Hospital Road, Galle','2026-11-02','2026-11-02 09:00:00','2026-11-02 13:00:00','OUT_FOR_DELIVERY',0,NULL,'HEN-2026-000124','DM-2026-000002','DRM-2026-000002',NULL),
+('DLV-2026-000203','OUTBOUND','67 Beach Road, Negombo','2026-11-01','2026-11-01 09:00:00','2026-11-01 13:00:00','ATTEMPT_FAILED',1,'CUSTOMER','HEN-2026-000125','DM-2026-000002','DRM-2026-000002',NULL);
+
+-- outcome FAILED -> RECEIVER_ABSENT
+INSERT INTO DeliveryAttempt (attemptId, attemptNumber, attemptedAt, arrivedAt, outcome, failureReason, nextAttemptAt, deliveryId) VALUES
+('ATT-000001',1,'2026-10-30 11:20:00','2026-10-30 11:15:00','SUCCESS',NULL,NULL,'DLV-2026-000201'),
+('ATT-000002',1,'2026-11-01 10:05:00','2026-11-01 10:00:00','RECEIVER_ABSENT','Receiver not available','2026-11-02 10:00:00','DLV-2026-000203');
+
+INSERT INTO DeliveryVerification (verificationId, pinHash, generatedAt, expiresAt, verifiedAt, attemptCount, status, attemptId, receiverLinkId) VALUES
+('VER-000001','$2b$10$dummypin000000000000000000000000000000000000000000001','2026-10-30 11:00:00','2026-10-30 12:00:00','2026-10-30 11:18:00',1,'VERIFIED','ATT-000001','LNK-000001'),
+('VER-000002','$2b$10$dummypin000000000000000000000000000000000000000000002','2026-11-01 09:50:00','2026-11-01 10:50:00',NULL,0,'EXPIRED','ATT-000002','LNK-000003');
+
+-- Tracking events (actorId is polymorphic - no FK)
+INSERT INTO TrackingEvent (eventId, eventType, occurredAt, locationDescription, remarks, isVisibleToReceiver, actorType, actorId, parcelId, receiverLinkId, deliveryId, warehouseId) VALUES
+('EVT-000001','PICKED_UP','2026-10-28 10:30:00','Dehiwala','Collected from sender',TRUE,'DRIVER','USR-000009','HEN-2026-000123','LNK-000001',NULL,NULL),
+('EVT-000002','RECEIVED_AT_WAREHOUSE','2026-10-28 13:00:00','Colombo Central Hub','Weight confirmed 4.70kg',TRUE,'WAREHOUSE_OFFICER','USR-000012','HEN-2026-000123','LNK-000001',NULL,'WH-001'),
+('EVT-000003','OUT_FOR_DELIVERY','2026-10-30 08:30:00','Colombo Central Hub','Loaded on VEH-001',TRUE,'DRIVER','USR-000009','HEN-2026-000123','LNK-000001','DLV-2026-000201','WH-001'),
+('EVT-000004','DELIVERED','2026-10-30 11:20:00','Kandy','PIN verified',TRUE,'DRIVER','USR-000009','HEN-2026-000123','LNK-000001','DLV-2026-000201',NULL),
+('EVT-000005','RECEIVED_AT_WAREHOUSE','2026-10-29 17:00:00','Colombo Central Hub','Intake complete',TRUE,'WAREHOUSE_OFFICER','USR-000012','HEN-2026-000124','LNK-000002',NULL,'WH-001'),
+('EVT-000006','OUT_FOR_DELIVERY','2026-11-01 07:30:00','Colombo Central Hub','Loaded on VEH-002',TRUE,'DRIVER','USR-000010','HEN-2026-000124','LNK-000002','DLV-2026-000202','WH-001'),
+('EVT-000007','DELIVERY_FAILED','2026-11-01 10:05:00','Negombo','Receiver not available',TRUE,'DRIVER','USR-000010','HEN-2026-000125','LNK-000003','DLV-2026-000203',NULL);
+
+-- Pricing
+INSERT INTO PricingRule (ruleId, serviceType, zoneCode, minWeight, maxWeight, baseFee, additionalPerKgRate, fragileSurcharge, perAttemptCost, effectiveFrom, effectiveTo, isActive) VALUES
+('PR-001','STANDARD','KDY-01',0.00,5.00,450.00,80.00,150.00,200.00,'2026-01-01',NULL,TRUE),
+('PR-002','EXPRESS','KDY-01',0.00,5.00,800.00,120.00,250.00,350.00,'2026-01-01',NULL,TRUE),
+('PR-003','STANDARD','GLE-01',0.00,5.00,500.00,90.00,150.00,200.00,'2026-01-01',NULL,TRUE),
+('PR-004','STANDARD','NGB-01',5.01,20.00,600.00,100.00,150.00,250.00,'2026-01-01',NULL,TRUE);
+
+INSERT INTO ParcelPricingRule (parcelId, ruleId) VALUES
+('HEN-2026-000123','PR-002'),
+('HEN-2026-000124','PR-003'),
+('HEN-2026-000125','PR-004');
+
+INSERT INTO CostEstimate (estimateId, baseCharge, surcharges, totalEstimate, calculatedAt, pickupId) VALUES
+('EST-000001',800.00,250.00,1050.00,'2026-10-27 09:20:00','PCK-2026-000051'),
+('EST-000002',500.00,0.00,500.00,'2026-10-28 14:35:00','PCK-2026-000052'),
+('EST-000003',600.00,0.00,600.00,'2026-10-29 10:05:00','PCK-2026-000053');
+
+INSERT INTO CostEstimatePricingRule (estimateId, ruleId) VALUES
+('EST-000001','PR-002'),('EST-000002','PR-003'),('EST-000003','PR-004');
+
+-- Corporate agreement
+INSERT INTO CorporateAgreement (agreementId, startDate, endDate, terms, discountRate, paymentTerms, status, corporateCustomerId, financeMgrId) VALUES
+('AGR-2026-000001','2026-01-01','2026-12-31','Volume-based discount; monthly invoicing.',10.00,'NET_30','ACTIVE','USR-000015','USR-000006');
+
+INSERT INTO CSManagerViewsAgreement (csManagerId, agreementId) VALUES
+('USR-000003','AGR-2026-000001');
+
+-- Billing (invoice status SENT -> UNPAID; payment method CARD -> CARD_ONLINE)
+INSERT INTO Invoice (invoiceId, invoiceDate, dueDate, sourceType, subtotal, taxAmount, totalAmount, status, sentAt, customerId, csoId, deliveryId) VALUES
+('INV-2026-000301','2026-10-30','2026-11-13','DELIVERY',1050.00,189.00,1239.00,'PAID','2026-10-30 12:00:00','USR-000013','USR-000004','DLV-2026-000201'),
+('INV-2026-000302','2026-11-01','2026-11-15','DELIVERY',500.00,90.00,590.00,'UNPAID','2026-11-01 08:00:00','USR-000014','USR-000004','DLV-2026-000202'),
+('INV-2026-000303','2026-11-01','2026-12-01','DELIVERY',540.00,97.20,637.20,'UNPAID','2026-11-01 11:00:00','USR-000015','USR-000005','DLV-2026-000203');
+
+INSERT INTO FinanceOfficerViewsInvoice (financeOfficerId, invoiceId) VALUES
+('USR-000007','INV-2026-000301'),('USR-000007','INV-2026-000302'),('USR-000007','INV-2026-000303');
+
+INSERT INTO Payment (paymentId, amount, paymentDate, paymentMethod, transactionRef, invoiceId, financeOfficerId) VALUES
+('PAY-2026-000401',1239.00,'2026-10-30','CARD_ONLINE','TXN-88120934','INV-2026-000301','USR-000007');
+
+INSERT INTO Receipt (receiptId, issuedDate, amount, paymentId, customerId) VALUES
+('RCT-2026-000501','2026-10-30',1239.00,'PAY-2026-000401','USR-000013');
+
+-- Refund: status PENDING -> REQUESTED, reason -> COMPANY_FAULT_COMPLAINT,
+-- returnOption NO_RETURN -> NULL (no return needed)
+INSERT INTO Refund (refundId, refundReason, originalAmount, attemptCount, returnCost, returnOption, returnDeliveryFee, refundMethod, collectionBranch, requestedAt, expiresAt, expiryNotifiedAt, expiryAcknowledged, processedAt, status, accountHolderName, bankName, branchName, accountNumber, customerId, paymentId, parcelId, financeMgrId, issueId) VALUES
+('RFD-2026-000601','COMPANY_FAULT_COMPLAINT',1239.00,1,0.00,NULL,0.00,'BANK_TRANSFER',NULL,'2026-10-31 15:45:00','2026-12-31 23:59:59',NULL,FALSE,NULL,'REQUESTED','Amal Rathnayake','Bank of Ceylon','Dehiwala','0012345678','USR-000013','PAY-2026-000401','HEN-2026-000123','USR-000006','ISS-2026-000001');
+
+-- Notifications
+-- PICKUP_CONFIRMED -> PICKUP_APPROVED; DELIVERY_PIN -> RECEIVER_LINK;
+-- DELIVERY_FAILED (no matching enum) -> INVOICE_SENT with reworded content
+INSERT INTO Notification (notificationId, notificationType, channel, recipientContact, content, sentAt, status, customerId, receiverLinkId) VALUES
+('NTF-000001','PICKUP_APPROVED','EMAIL','amal.r@example.com','Your pickup PCK-2026-000051 is confirmed for 28 Oct.','2026-10-27 09:30:00','SENT','USR-000013',NULL),
+('NTF-000002','RECEIVER_LINK','SMS','+94712223301','Your tracking link for parcel HEN-2026-000123 is ready. Open it to track and confirm delivery.','2026-10-30 11:00:00','SENT',NULL,'LNK-000001'),
+('NTF-000003','INVOICE_SENT','EMAIL','orders@lankatea.example.com','Invoice INV-2026-000303 for parcel HEN-2026-000125 has been issued. Total due: LKR 637.20.','2026-11-01 11:00:00','SENT','USR-000015',NULL);
+
+-- Reports
+INSERT INTO PaymentReport (reportId, generatedAt, periodStart, periodEnd, totalCollected, totalRefunded, expiredRefundTotal, financeMgrId) VALUES
+('RPT-PAY-2026-10','2026-11-01 06:00:00','2026-10-01','2026-10-31',1239.00,0.00,0.00,'USR-000006');
+INSERT INTO DeliveryReport (reportId, generatedAt, periodStart, periodEnd, totalDeliveries, failedDeliveries, returnedParcels, transportMgrId) VALUES
+('RPT-DLV-2026-10','2026-11-01 06:05:00','2026-10-01','2026-10-31',3,1,0,'USR-000008');
+INSERT INTO StorageReport (reportId, generatedAt, periodStart, periodEnd, parcelsStored, unclaimedParcels, capacityUtilisation, warehouseMgrId) VALUES
+('RPT-STO-2026-10','2026-11-01 06:10:00','2026-10-01','2026-10-31',4,0,24.80,'USR-000011');
+INSERT INTO CustomerReport (reportId, generatedAt, periodStart, periodEnd, newCustomers, activeCustomers, corporateCustomers, csMgrId) VALUES
+('RPT-CUS-2026-10','2026-11-01 06:15:00','2026-10-01','2026-10-31',3,3,1,'USR-000003');
+
+INSERT INTO MDViewsPaymentReport VALUES ('USR-000002','RPT-PAY-2026-10');
+INSERT INTO MDViewsDeliveryReport VALUES ('USR-000002','RPT-DLV-2026-10');
+INSERT INTO MDViewsStorageReport VALUES ('USR-000002','RPT-STO-2026-10');
+INSERT INTO MDViewsCustomerReport VALUES ('USR-000002','RPT-CUS-2026-10');
+
+INSERT INTO WarehouseOfficerHandlesParcel (warehouseOfficerId, parcelId) VALUES
+('USR-000012','HEN-2026-000123'),('USR-000012','HEN-2026-000124'),
+('USR-000012','HEN-2026-000125'),('USR-000012','HEN-2026-000126');
