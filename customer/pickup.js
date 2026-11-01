@@ -35,7 +35,7 @@
     });
   }
 
-  // Styled confirm dialog for any form carrying data-confirm
+
   var dlg = document.getElementById('cuConfirm');
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) {

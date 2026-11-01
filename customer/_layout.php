@@ -55,10 +55,7 @@ function cust_status_class(string $s): string {
             'Rejected' => 'danger', 'Cancelled' => 'danger', 'Failed' => 'danger'][$s] ?? 'info';
 }
 
-/**
- * Opens the page: <head>, demo banner, site header.
- * $active = dashboard | pickups | new ; $bodyClass = 'cu-page' (hero pages) or 'cu-page login-page' (form pages)
- */
+
 function cust_header(PDO $pdo, string $title, string $active = 'pickups', string $bodyClass = 'cu-page'): void {
     $name = cust_name($pdo, cust_id());
     $nav  = fn($key) => $active === $key ? ' style="color:#fff"' : '';
@@ -100,7 +97,7 @@ function cust_header(PDO $pdo, string $title, string $active = 'pickups', string
 </header>
 <?php }
 
-/** Navy gradient hero band (same look as the home page hero, shorter). $titleHtml may contain <span> for amber text. */
+
 function cust_hero(string $pill, string $titleHtml, string $lead = '', string $ctaHtml = ''): void { ?>
 <section class="hero cu-hero">
   <div class="container">

@@ -96,7 +96,8 @@
 .cu-actions form{margin:0}
 
 /* Confirm dialog */
-.cu-dialog{border:0;border-radius:20px;padding:28px;max-width:410px;width:92%;box-shadow:0 30px 70px rgba(11,31,58,.35);font-family:inherit}
+.cu-dialog{border:0;border-radius:20px;padding:28px;max-width:410px;width:92%;margin:auto;box-shadow:0 30px 70px rgba(11,31,58,.35);font-family:inherit}
+.cu-dialog[open]{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
 .cu-dialog::backdrop{background:rgba(11,31,58,.55)}
 .cu-dialog h3{color:var(--navy);font-size:1.25rem}
 .cu-dialog p{margin-top:6px}
