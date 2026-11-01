@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * HELMS - Henowic Enterprise Logistics Management System
+ * Public home page and parcel tracking.
+ */
 session_start();
 
 require_once __DIR__ . '/config/database.php';
@@ -8,13 +11,11 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName   = $_SESSION['full_name'] ?? '';
 $userRole   = $_SESSION['role'] ?? '';
 
-// Parcel tracking variables
 $trackingResult = null;
 $trackingEvents = [];
 $trackingError = '';
 $trackingId = '';
 
-// Handle tracking form submission on this same page
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['track_parcel'])) {
 
     $trackingId = strtoupper(trim($_POST['id'] ?? ''));
@@ -26,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['track_parcel'])) {
     } else {
 
         try {
-            // Find the parcel
             $stmt = $pdo->prepare("
                 SELECT parcelId, status
                 FROM Parcel
@@ -71,7 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['track_parcel'])) {
     }
 }
 
-// Convert database status values into readable labels
 function formatTrackingStatus($status)
 {
     $statuses = [
@@ -141,7 +140,7 @@ $staffRoles = [
       </div>
     </a>
     <button class="burger" id="burger" aria-label="Menu">
-      <svg class="i" viewBox="0 0 24 24" style="width:28px;height:28px">
+      <svg class="i" viewBox="0 0 24 24">
         <path d="M4 7h16M4 12h16M4 17h16"/>
       </svg>
     </button>
@@ -161,7 +160,6 @@ $staffRoles = [
   </div>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <div class="container hero-grid">
     <div>
@@ -176,7 +174,6 @@ $staffRoles = [
       </div>
     </div>
 
-    <!-- Public tracking -->
     <div class="track" id="tracking">
       <h3>
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -275,11 +272,9 @@ $staffRoles = [
   </div>
 </section>
 
-<!-- PORTALS -->
 <section class="portals" id="portals">
   <div class="container portal-grid">
 
-    <!-- Customers -->
     <article class="portal">
       <div class="ico c1">
         <svg class="i" viewBox="0 0 24 24">
@@ -309,7 +304,6 @@ $staffRoles = [
       </div>
     </article>
 
-    <!-- Staff -->
     <article class="portal">
       <div class="ico c2">
         <svg class="i" viewBox="0 0 24 24">
@@ -329,7 +323,6 @@ $staffRoles = [
       </div>
     </article>
 
-    <!-- Drivers -->
     <article class="portal">
       <div class="ico c3">
         <svg class="i" viewBox="0 0 24 24">
@@ -362,7 +355,6 @@ $staffRoles = [
   </div>
 </section>
 
-<!-- SERVICES -->
 <section class="block" id="services">
   <div class="container">
     <div class="head">
@@ -382,7 +374,6 @@ $staffRoles = [
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
 <section class="block how" id="how">
   <div class="container">
     <div class="head">
@@ -412,7 +403,7 @@ $staffRoles = [
       </div>
     </div>
 
-    <div class="band" style="margin-top:64px">
+    <div class="band band-spaced">
       <div>
         <h2>One system. Every department connected.</h2>
         <p>HELMS replaces scattered spreadsheets, paper forms and chat messages with a single, role-based platform so everyone sees the same, up-to-date information.</p>
@@ -429,19 +420,18 @@ $staffRoles = [
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer id="contact">
   <div class="container">
     <div class="f-grid">
       <div>
-        <div class="brand" style="margin-bottom:14px">
+        <div class="brand footer-brand">
           <div class="logo">H</div>
           <div>
             <b>HELMS</b>
             <small>Henowic Inventors (Pvt) Ltd.</small>
           </div>
         </div>
-        <p style="font-size:.88rem">Reliable, organized domestic parcel delivery across Sri Lanka.</p>
+        <p class="footer-description">Reliable, organized domestic parcel delivery across Sri Lanka.</p>
       </div>
       <div>
         <h5>Portals</h5>
