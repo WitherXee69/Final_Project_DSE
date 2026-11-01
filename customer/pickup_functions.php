@@ -1,9 +1,5 @@
 <?php
-/**
- * HELMS - Pickup business logic (Customer: Create / Read / Update / Cancel)
- * Table: Pickup (see sql/HELMS.sql). Every function takes the project's $pdo.
- * IDs are text (e.g. PCK-2026-000051); statuses are the ENUM values stored in the database.
- */
+
 const PICKUP_WINDOWS = ['09:00-12:00', '13:00-16:00', '16:00-18:00'];
 
 // Must match Pickup.status ENUM in sql/HELMS.sql
@@ -25,7 +21,6 @@ function pickup_label(?string $s): string {
     ][$s ?? ''] ?? (string)$s;
 }
 
-/** True if the text looks like a pickup id, e.g. PCK-2026-000051 */
 function pickup_valid_id(string $id): bool {
     return (bool)preg_match('/^PCK-\d{4}-\d{6}$/', $id);
 }
@@ -102,7 +97,7 @@ function pickup_get(PDO $pdo, string $pickupId, string $customerId): ?array {
 }
 
 /** UPDATE - only while still REQUESTED (not yet approved by staff) */
-function pickup_update(PDO $pdo, string $pickupId, string $customerId, array $d): bool {
+function updatePickup(PDO $pdo, string $pickupId, string $customerId, array $d): bool {
     $st = $pdo->prepare(
         "UPDATE Pickup SET pickupDate = ?, preferredTimeWindow = ?, pickupAddress = ?
          WHERE pickupId = ? AND customerId = ? AND status = ?"
@@ -112,14 +107,20 @@ function pickup_update(PDO $pdo, string $pickupId, string $customerId, array $d)
     return $st->rowCount() > 0;
 }
 
-/** CANCEL - soft delete (keeps the record); allowed while REQUESTED or APPROVED */
-function pickup_cancel(PDO $pdo, string $pickupId, string $customerId): bool {
-    $st = $pdo->prepare(
-        "UPDATE Pickup SET status = ?, cancelledAt = NOW()
-         WHERE pickupId = ? AND customerId = ? AND status IN (?, ?)"
-    );
-    $st->execute([PK_CANCELLED, $pickupId, $customerId, PK_REQUESTED, PK_APPROVED]);
-    return $st->rowCount() > 0;
+/** CANCEL - permanently deletes the request; allowed while REQUESTED or APPROVED */
+function cancelPickup(PDO $pdo, string $pickupId, string $customerId): bool {
+    try {
+        $st = $pdo->prepare(
+            "DELETE FROM Pickup
+             WHERE pickupId = ? AND customerId = ? AND status IN (?, ?)"
+        );
+        $st->execute([$pickupId, $customerId, PK_REQUESTED, PK_APPROVED]);
+        return $st->rowCount() > 0;
+    } catch (PDOException $e) {
+        // 23000 = another table (e.g. CostEstimate, Parcel) still points at this pickup
+        if ($e->getCode() === '23000') return false;
+        throw $e;
+    }
 }
 
 function pickup_can_edit(array $p): bool   { return ($p['status'] ?? '') === PK_REQUESTED; }

@@ -1,5 +1,5 @@
 <?php
-
+// READ (list): My pickups, with status tabs and search
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/pickup_functions.php';
 $uid     = cust_id();
@@ -46,7 +46,7 @@ cust_hero('PICKUP MANAGEMENT', 'My <span>pickups</span>',
               <a class="btn btn-outline cu-sm" href="pickup_view.php?id=<?= urlencode($p['pickupId']) ?>">View</a>
               <?php if (pickup_can_edit($p)): ?><a class="btn btn-outline cu-sm" href="pickup_edit.php?id=<?= urlencode($p['pickupId']) ?>">Edit</a><?php endif; ?>
               <?php if (pickup_can_cancel($p)): ?>
-                <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled. This cannot be undone.">
+                <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled and permanently deleted. This cannot be undone.">
                   <input type="hidden" name="csrf_token" value="<?= cust_h(cust_csrf()) ?>">
                   <input type="hidden" name="id" value="<?= cust_h($p['pickupId']) ?>">
                   <button class="btn cu-sm cu-danger" type="submit">Cancel</button>

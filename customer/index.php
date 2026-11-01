@@ -21,7 +21,7 @@ cust_hero('CUSTOMER PORTAL · HELMS', 'Welcome back, <span>' . cust_h($name) . '
       <article class="portal cu-stat"><div class="ico c1"><?= CUST_TRUCK ?></div><h3><?= (int)array_sum($counts) ?></h3><p>Total pickups</p></article>
       <article class="portal cu-stat"><div class="ico c2"><?= CUST_CLOCK ?></div><h3><?= (int)($counts[PK_REQUESTED] ?? 0) ?></h3><p>Awaiting approval</p></article>
       <article class="portal cu-stat"><div class="ico c3"><?= CUST_CHECK ?></div><h3><?= (int)($counts[PK_APPROVED] ?? 0) ?></h3><p>Approved</p></article>
-      <article class="portal cu-stat"><div class="ico c4"><?= CUST_X ?></div><h3><?= (int)($counts[PK_CANCELLED] ?? 0) ?></h3><p>Cancelled</p></article>
+      <article class="portal cu-stat"><div class="ico c1"><?= CUST_PIN ?></div><h3><?= (int)($counts[PK_PICKED_UP] ?? 0) ?></h3><p>Picked up</p></article>
     </div>
   </div>
 </section>

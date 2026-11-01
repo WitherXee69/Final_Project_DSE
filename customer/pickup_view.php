@@ -57,7 +57,7 @@ cust_hero('PICKUP MANAGEMENT', 'Pickup <span>' . cust_h($p['pickupId']) . '</spa
       <div class="cu-actions" style="margin-top:22px">
         <?php if (pickup_can_edit($p)): ?><a class="btn btn-primary" href="pickup_edit.php?id=<?= urlencode($p['pickupId']) ?>">Edit pickup</a><?php endif; ?>
         <?php if (pickup_can_cancel($p)): ?>
-          <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled. This cannot be undone.">
+          <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled and permanently deleted. This cannot be undone.">
             <input type="hidden" name="csrf_token" value="<?= cust_h(cust_csrf()) ?>">
             <input type="hidden" name="id" value="<?= cust_h($p['pickupId']) ?>">
             <button class="btn btn-outline cu-danger-outline" type="submit">Cancel pickup</button>
