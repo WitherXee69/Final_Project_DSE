@@ -2,27 +2,32 @@
 require_once 'config/database.php';
 
 $totalCustomers = $pdo->query(
-    "SELECT COUNT(*) FROM customer"
+    "SELECT COUNT(*) FROM Customer"
 )->fetchColumn();
 
 $corporateCustomers = $pdo->query(
-    "SELECT COUNT(*) FROM corporatecustomer"
+    "SELECT COUNT(*) FROM CorporateCustomer"
 )->fetchColumn();
 
 $activeAgreements = $pdo->query(
-    "SELECT COUNT(*) FROM corporateagreement"
+    "SELECT COUNT(*) FROM CorporateAgreement"
 )->fetchColumn();
+
+$individualCustomers = $totalCustomers - $corporateCustomers;
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Service Manager Dashboard | HELMS</title>
+
+    <title>Customer Service Manager Portal | HELMS</title>
 
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/customer_service_dashboard.css">
+
 </head>
 
 <body>
@@ -38,13 +43,21 @@ $activeAgreements = $pdo->query(
                 <div>
 
                     <b>HELMS</b>
-                    <small>Henowic Inventors (Pvt) Ltd.</small>
+                    <small>Customer Service Manager Portal</small>
 
                 </div>
 
             </a>
 
             <nav class="menu">
+
+                <a class="link" href="#">Dashboard</a>
+
+                <a class="link" href="#customers">Customers</a>
+
+                <a class="link" href="#">Corporate</a>
+
+                <a class="link" href="view_agreements.php">Agreements</a>
 
                 <a class="btn btn-ghost" href="index.php">Home</a>
 
@@ -54,160 +67,199 @@ $activeAgreements = $pdo->query(
 
     </header>
 
-    <section class="block">
+    <section class="block" style="padding-top:0;">
+
+        <div class="csm-hero">
+
+            <div class="container">
+
+                <div class="csm-tag">CUSTOMER SERVICE MANAGER PORTAL</div>
+
+                <h1>
+                    Welcome back,<br>
+                    <span>Customer Service Manager</span>
+                </h1>
+
+                <p>Manage individual customers, corporate customers, customer agreements and customer records from one central HELMS workspace.</p>
+
+                <div class="csm-buttons">
+
+                    <a href="register_corporate_customer.php" class="btn btn-primary">Register Corporate Customer</a>
+                    <a href="view_agreements.php" class="btn btn-primary">View Agreements</a>                    
+
+                </div>
+
+            </div>
+
+        </div>
 
         <div class="container">
 
-            <div class="head">
+            <div class="stat-grid">
 
-                <small>CUSTOMER SERVICE MANAGER</small>
+                <div class="stat-card">
 
-                <h2>Customer Management Dashboard</h2>
+                    <div class="icon">👥</div>
 
-                <p>Manage corporate customers, customer profiles and agreements.</p>
+                    <div class="number"><?= $totalCustomers ?></div>
+
+                    <div class="label">Total Customers</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="icon">🏢</div>
+                    <div class="number"><?= $corporateCustomers ?></div>
+                    <div class="label">Corporate Customers</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="icon">👤</div>
+                    <div class="number"><?= $individualCustomers ?></div>
+                    <div class="label">Individual Customers</div>
+
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">📄</div>
+                    <div class="number"><?= $activeAgreements ?></div>
+                    <div class="label">Active Agreements</div>
+
+                </div>
 
             </div>
 
-            <div class="svc-grid">
-
-                <div class="svc">
-
-                    <h4>Total Customers</h4>
-                    <h2><?= $totalCustomers ?></h2>
-
-                </div>
-
-                <div class="svc">
-
-                    <h4>Corporate Customers</h4>
-                    <h2><?= $corporateCustomers ?></h2>
-
-                </div>
-
-                <div class="svc">
-
-                    <h4>Active Agreements</h4>
-                    <h2><?= $activeAgreements ?></h2>
-
-                </div>
-
-            </div>
-
-            <br><br><br>
-
-            <div class="head">
+            <div class="directory-card" id="customers">
 
                 <small>CUSTOMER DIRECTORY</small>
-                <h2>Customers</h2>
+                <h3>Manage Customers</h3>
 
-            </div>
+                <p style="margin-bottom:20px; color:#6b7280;">Search and manage individual and corporate customer records.</p>
 
-            <form style="margin-bottom:30px;">
+                <form style="margin-bottom:25px;">
 
-                <div class="field">
+                    <div class="field">
 
-                    <input type="text" name="search" placeholder="Search by customer ID, customer name, company name or email...">
+                        <input type="text" name="search" placeholder="Search by customer ID, customer name, company name or email...">
 
-                    <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="submit" class="btn btn-primary">Search</button>
 
-                </div>
+                    </div>
 
-            </form>
+                </form>
 
-            <div class="svc">
+                <table class="customer-table">
 
-                <h4>Customer Records</h4>
+                    <thead>
 
-                <table style="width:100%; border-collapse:collapse; margin-top:15px; text-align:center;">
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
 
-                    <tr>
-                        <th style="padding:10px; border-bottom:2px solid #e3e8ef;">Customer ID</th>
-                        <th style="padding:10px; border-bottom:2px solid #e3e8ef;">Customer Type</th>
-                        <th style="padding:10px; border-bottom:2px solid #e3e8ef;">Customer Name</th>
-                        <th style="padding:10px; border-bottom:2px solid #e3e8ef;">Email</th>
-                        <th style="padding:10px; border-bottom:2px solid #e3e8ef;">Phone</th>
-                    </tr>
+                    </thead>
 
-                    <tr>
-                        <td style="padding:8px;">USR-000013</td>
-                        <td style="padding:8px;">Individual</td>
-                        <td style="padding:8px;">Amal Rathnayake</td>
-                        <td style="padding:8px;">amal.r@example.com</td>
-                        <td style="padding:8px;">+94771234013</td>
-                    </tr>
+                    <tbody>
 
-                    <tr>
-                        <td style="padding:8px;">USR-000014</td>
-                        <td style="padding:8px;">Individual</td>
-                        <td style="padding:8px;">Sachini Wijesinghe</td>
-                        <td style="padding:8px;">sachini.w@example.com</td>
-                        <td style="padding:8px;">+94771234014</td>
-                    </tr>
+                        <tr>
+                            <td>USR-000013</td>
+                            <td>Individual</td>
+                            <td>Amal Rathnayake</td>
+                            <td>amal.r@example.com</td>
+                            <td>+94771234013</td>
 
-                    <tr>
-                        <td style="padding:8px;">USR-000015</td>
-                        <td style="padding:8px;">Corporate</td>
-                        <td style="padding:8px;">Lanka Tea Exporters (Pvt) Ltd</td>
-                        <td style="padding:8px;">orders@lankatea.example.com</td>
-                        <td style="padding:8px;">+94112223015</td>
-                    </tr>
+                            <td>
+                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>USR-000014</td>
+                            <td>Individual</td>
+                            <td>Sachini Wijesinghe</td>
+                            <td>sachini.w@example.com</td>
+                            <td>+94771234014</td>
+
+                            <td>
+                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>USR-000015</td>
+                            <td>Corporate</td>
+                            <td>Lanka Tea Exporters (Pvt) Ltd</td>
+                            <td>orders@lankatea.example.com</td>
+                            <td>+94112223015</td>
+
+                            <td>
+                                <a href="update_customer.php" class="btn btn-outline">Edit</a>
+                            </td>
+                        </tr>
+
+                    </tbody>
 
                 </table>
 
             </div>
 
-            <br><br><br>
-
             <div class="head">
 
-                <small>FUNCTIONS</small>
-                <h2>Customer Management</h2>
+                <small>MANAGEMENT ACTIONS</small>
+                <h2>Quick Actions</h2>
 
             </div>
 
-            <div class="svc-grid">
+            <div class="quick-actions">
 
-                <div class="svc">
+                <div class="action-card">
 
                     <h4>Register Corporate Customer</h4>
-                    <p>Create a new corporate customer account.</p>
+                    <p>Create and manage corporate customer accounts.</p>
 
                     <br>
 
-                    <a href="register_corporate_customer.php" class="btn btn-primary">Open</a>
+                    <a href="register_corporate_customer.php" class="btn btn-primary">Register Corporate Customer</a>
 
                 </div>
 
-                <div class="svc">
+                <div class="action-card">
 
                     <h4>Update Customer</h4>
-                    <p>Update customer details and records.</p>
+                    <p>Update customer information and details.</p>
 
                     <br>
 
-                    <a href="update_customer.php" class="btn btn-primary">Open</a>
+                    <a href="update_customer.php" class="btn btn-primary">Update Customer</a>
 
                 </div>
 
-                <div class="svc">
+                <div class="action-card">
 
                     <h4>Deactivate Customer</h4>
-                    <p>Deactivate customer accounts.</p>
+                    <p>Deactivate customer accounts when required.</p>
 
                     <br>
 
-                    <a href="deactivate_customer.php" class="btn btn-primary">Open</a>
+                    <a href="deactivate_customer.php" class="btn btn-primary">Deactivate Customer</a>
 
                 </div>
 
-                <div class="svc">
+                <div class="action-card">
 
                     <h4>View Agreements</h4>
-                    <p>View corporate customer agreements.</p>
+                    <p>View corporate agreements and contract details.</p>
 
                     <br>
 
-                    <a href="view_agreements.php" class="btn btn-primary">Open</a>
+                    <a href="view_agreements.php" class="btn btn-primary">View Agreements</a>
 
                 </div>
 
