@@ -6,6 +6,7 @@ require_login();
 $role = $_SESSION['role'];
 $name = $_SESSION['full_name'] ?? 'HELMS User';
 
+// Use the existing warehouse dashboard.
 if (in_array($role, ['WarehouseOfficer', 'WarehouseManager'], true)) {
     header('Location: warehouse/index.php');
     exit;
@@ -16,8 +17,18 @@ if (in_array($role, ['SystemAdmin'], true)) {
     exit;
 }
 
-if ($role === 'ManagingDirector') {
-    header('Location: managing_director/index.php');
+if (in_array($role, ['Driver'], true)) {
+    header('Location: driver/driver_dashboard.php');
+    exit;
+}
+
+if (in_array($role, ['IndividualCustomer', 'CorporateCustomer'], true)) {
+    header('Location: customer/index.php');
+    exit;
+}
+
+if (in_array($role, ['TransportManager'], true)) {
+    header('Location: transportMgr/transportMgr_dashboard.php');
     exit;
 }
 
@@ -63,7 +74,7 @@ $displayRole = $roleNames[$role] ?? $role;
     </div>
 </header>
 
-<main class="container dashboard-main">
+<main class="container" style="padding-top:60px;padding-bottom:60px;">
     <span class="pill"><?= h($displayRole) ?> PORTAL</span>
 
     <h1>Welcome, <?= h($name) ?>.</h1>
@@ -72,7 +83,7 @@ $displayRole = $roleNames[$role] ?? $role;
         You are signed in to the Henowic Enterprise Logistics Management System.
     </p>
 
-    <section class="login-card dashboard-account-card">
+    <section class="login-card" style="max-width:650px;margin-top:30px;">
         <h2>Your account</h2>
 
         <p><strong>Name:</strong> <?= h($name) ?></p>
