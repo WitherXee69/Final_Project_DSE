@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Storage report template for Jaspersoft Studio. Input parameter: REPORT_ID. -->
+<!--
+  HELMS - Storage Report
+  Edit this file in Jaspersoft Studio (or any text editor). No PHP change is needed:
+  the Managing Director dashboard compiles it every time a report is viewed.
+  Input parameter : REPORT_ID  (the reportId chosen on the dashboard)
+-->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="storage_report" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="30" bottomMargin="30" whenNoDataType="AllSectionsNoDetail">
     <parameter name="REPORT_ID" class="java.lang.String"/>
-    <queryString><![CDATA[SELECT r.reportId, r.generatedAt, r.periodStart, r.periodEnd,
+    <queryString>
+        <![CDATA[SELECT r.reportId, r.generatedAt, r.periodStart, r.periodEnd,
        COALESCE(r.parcelsStored, 0)        AS parcelsStored,
        COALESCE(r.unclaimedParcels, 0)     AS unclaimedParcels,
        COALESCE(r.capacityUtilisation, 0)  AS capacityUtilisation,
@@ -13,7 +19,8 @@ FROM StorageReport r
 LEFT JOIN User u             ON u.userId = r.warehouseMgrId
 LEFT JOIN WarehouseManager m ON m.userId = r.warehouseMgrId
 LEFT JOIN Warehouse w        ON w.warehouseId = m.warehouseId
-WHERE r.reportId = $P{REPORT_ID}]]></queryString>
+WHERE r.reportId = $P{REPORT_ID}]]>
+    </queryString>
     <field name="reportId" class="java.lang.String"/>
     <field name="generatedAt" class="java.sql.Timestamp"/>
     <field name="periodStart" class="java.sql.Date"/>
@@ -26,281 +33,59 @@ WHERE r.reportId = $P{REPORT_ID}]]></queryString>
     <field name="warehouseName" class="java.lang.String"/>
     <title>
         <band height="84">
-            <rectangle radius="6">
-                <reportElement mode="Opaque" x="0" y="0" width="515" height="72" forecolor="#0B1F3A" backcolor="#0B1F3A"/>
-                <graphicElement>
-                    <pen lineWidth="0"/>
-                </graphicElement>
-            </rectangle>
-            <staticText>
-                <reportElement x="16" y="10" width="200" height="26" forecolor="#FFFFFF"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="20" isBold="true" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[HELMS]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="16" y="38" width="240" height="18" forecolor="#9FB3CF"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="9" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Henowic Inventors (Pvt) Ltd.]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="250" y="10" width="250" height="26" forecolor="#FFFFFF"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="15" isBold="true" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Storage Report]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="250" y="38" width="250" height="18" forecolor="#FF9F1C"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="9" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Management report]]></text>
-            </staticText>
+        <rectangle radius="6"><reportElement mode="Opaque" x="0" y="0" width="515" height="72" forecolor="#0B1F3A" backcolor="#0B1F3A"/><graphicElement><pen lineWidth="0"/></graphicElement></rectangle>
+        <staticText><reportElement x="16" y="10" width="200" height="26" forecolor="#FFFFFF"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="20" isBold="true" isItalic="false"/></textElement><text><![CDATA[HELMS]]></text></staticText>
+        <staticText><reportElement x="16" y="38" width="240" height="18" forecolor="#9FB3CF"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="9" isBold="false" isItalic="false"/></textElement><text><![CDATA[Henowic Inventors (Pvt) Ltd.]]></text></staticText>
+        <staticText><reportElement x="250" y="10" width="250" height="26" forecolor="#FFFFFF"/><textElement textAlignment="Right" verticalAlignment="Middle"><font size="15" isBold="true" isItalic="false"/></textElement><text><![CDATA[Storage Report]]></text></staticText>
+        <staticText><reportElement x="250" y="38" width="250" height="18" forecolor="#FF9F1C"/><textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="false" isItalic="false"/></textElement><text><![CDATA[Management report]]></text></staticText>
         </band>
     </title>
     <detail>
         <band height="398">
-            <staticText>
-                <reportElement x="0" y="8" width="515" height="16" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="8" isBold="true" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[REPORT DETAILS]]></text>
-            </staticText>
-            <line>
-                <reportElement x="0" y="26" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="30" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Report ID]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="30" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{reportId}]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="52" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="54" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Reporting period]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="54" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false"/>
-                </textElement>
-                <textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd MMM yyyy").format($F{periodStart}) + "  to  " + new java.text.SimpleDateFormat("dd MMM yyyy").format($F{periodEnd})]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="76" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="78" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Generated on]]></text>
-            </staticText>
-            <textField pattern="dd MMM yyyy, HH:mm" isBlankWhenNull="true">
-                <reportElement x="170" y="78" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{generatedAt}]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="100" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="102" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Prepared by (Warehouse Manager)]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="102" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{preparedBy}]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="124" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="126" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Warehouse]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="126" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{warehouseName}]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="148" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="166" width="515" height="16" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="8" isBold="true" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[KEY FIGURES]]></text>
-            </staticText>
-            <line>
-                <reportElement x="0" y="184" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <rectangle radius="6">
-                <reportElement mode="Opaque" x="0" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/>
-                <graphicElement>
-                    <pen lineWidth="0.75" lineColor="#E3E8EF"/>
-                </graphicElement>
-            </rectangle>
-            <staticText>
-                <reportElement x="12" y="196" width="141" height="18" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="9" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Parcels stored]]></text>
-            </staticText>
-            <textField pattern="#,##0" isBlankWhenNull="true">
-                <reportElement x="12" y="216" width="141" height="36" forecolor="#0B1F3A"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="17" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{parcelsStored}]]></textFieldExpression>
-            </textField>
-            <rectangle radius="6">
-                <reportElement mode="Opaque" x="175" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/>
-                <graphicElement>
-                    <pen lineWidth="0.75" lineColor="#E3E8EF"/>
-                </graphicElement>
-            </rectangle>
-            <staticText>
-                <reportElement x="187" y="196" width="141" height="18" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="9" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Unclaimed parcels]]></text>
-            </staticText>
-            <textField pattern="#,##0" isBlankWhenNull="true">
-                <reportElement x="187" y="216" width="141" height="36" forecolor="#0B1F3A"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="17" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{unclaimedParcels}]]></textFieldExpression>
-            </textField>
-            <rectangle radius="6">
-                <reportElement mode="Opaque" x="350" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/>
-                <graphicElement>
-                    <pen lineWidth="0.75" lineColor="#E3E8EF"/>
-                </graphicElement>
-            </rectangle>
-            <staticText>
-                <reportElement x="362" y="196" width="141" height="18" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="9" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Capacity utilisation]]></text>
-            </staticText>
-            <textField pattern="#,##0.0'%'" isBlankWhenNull="true">
-                <reportElement x="362" y="216" width="141" height="36" forecolor="#0B1F3A"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="17" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{capacityUtilisation}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="0" y="280" width="515" height="16" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="8" isBold="true" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[ANALYSIS]]></text>
-            </staticText>
-            <line>
-                <reportElement x="0" y="298" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="302" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Unclaimed share]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="302" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{unclaimedRate} + "% of stored parcels"]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="324" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="326" width="170" height="22" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Capacity status]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="170" y="326" width="345" height="22" forecolor="#000000"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="10" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{capacityUtilisation}.doubleValue() >= 80 ? "HIGH - near full capacity" : ($F{capacityUtilisation}.doubleValue() >= 50 ? "MODERATE" : "LOW - plenty of space")]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="0" y="348" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="364" width="515" height="30" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="8" isBold="false" isItalic="true"/>
-                </textElement>
-                <text><![CDATA[Figures are taken from the Storage Report submitted by the Warehouse Manager for the period shown.]]></text>
-            </staticText>
+        <staticText><reportElement x="0" y="8" width="515" height="16" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="true" isItalic="false"/></textElement><text><![CDATA[REPORT DETAILS]]></text></staticText>
+        <line><reportElement x="0" y="26" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="30" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Report ID]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="30" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{reportId}]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="52" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="54" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Reporting period]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="54" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false"/></textElement><textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd MMM yyyy").format($F{periodStart}) + "  to  " + new java.text.SimpleDateFormat("dd MMM yyyy").format($F{periodEnd})]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="76" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="78" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Generated on]]></text></staticText>
+        <textField pattern="dd MMM yyyy, HH:mm" isBlankWhenNull="true"><reportElement x="170" y="78" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false"/></textElement><textFieldExpression><![CDATA[$F{generatedAt}]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="100" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="102" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Prepared by (Warehouse Manager)]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="102" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false"/></textElement><textFieldExpression><![CDATA[$F{preparedBy}]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="124" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="126" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Warehouse]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="126" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false"/></textElement><textFieldExpression><![CDATA[$F{warehouseName}]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="148" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="166" width="515" height="16" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="true" isItalic="false"/></textElement><text><![CDATA[KEY FIGURES]]></text></staticText>
+        <line><reportElement x="0" y="184" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <rectangle radius="6"><reportElement mode="Opaque" x="0" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/><graphicElement><pen lineWidth="0.75" lineColor="#E3E8EF"/></graphicElement></rectangle>
+        <staticText><reportElement x="12" y="196" width="141" height="18" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="9" isBold="false" isItalic="false"/></textElement><text><![CDATA[Parcels stored]]></text></staticText>
+        <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="12" y="216" width="141" height="36" forecolor="#0B1F3A"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="17" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{parcelsStored}]]></textFieldExpression></textField>
+        <rectangle radius="6"><reportElement mode="Opaque" x="175" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/><graphicElement><pen lineWidth="0.75" lineColor="#E3E8EF"/></graphicElement></rectangle>
+        <staticText><reportElement x="187" y="196" width="141" height="18" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="9" isBold="false" isItalic="false"/></textElement><text><![CDATA[Unclaimed parcels]]></text></staticText>
+        <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="187" y="216" width="141" height="36" forecolor="#0B1F3A"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="17" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{unclaimedParcels}]]></textFieldExpression></textField>
+        <rectangle radius="6"><reportElement mode="Opaque" x="350" y="188" width="165" height="74" forecolor="#E3E8EF" backcolor="#F4F6FA"/><graphicElement><pen lineWidth="0.75" lineColor="#E3E8EF"/></graphicElement></rectangle>
+        <staticText><reportElement x="362" y="196" width="141" height="18" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="9" isBold="false" isItalic="false"/></textElement><text><![CDATA[Capacity utilisation]]></text></staticText>
+        <textField pattern="#,##0.0'%'" isBlankWhenNull="true"><reportElement x="362" y="216" width="141" height="36" forecolor="#0B1F3A"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="17" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{capacityUtilisation}]]></textFieldExpression></textField>
+        <staticText><reportElement x="0" y="280" width="515" height="16" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="true" isItalic="false"/></textElement><text><![CDATA[ANALYSIS]]></text></staticText>
+        <line><reportElement x="0" y="298" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="302" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Unclaimed share]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="302" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{unclaimedRate} + "% of stored parcels"]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="324" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="326" width="170" height="22" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="false" isItalic="false"/></textElement><text><![CDATA[Capacity status]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="170" y="326" width="345" height="22" forecolor="#000000"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{capacityUtilisation}.doubleValue() >= 80 ? "HIGH - near full capacity" : ($F{capacityUtilisation}.doubleValue() >= 50 ? "MODERATE" : "LOW - plenty of space")]]></textFieldExpression></textField>
+        <line><reportElement x="0" y="348" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="364" width="515" height="30" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="false" isItalic="true"/></textElement><text><![CDATA[Figures are taken from the Storage Report submitted by the Warehouse Manager for the period shown.]]></text></staticText>
         </band>
     </detail>
     <pageFooter>
         <band height="28">
-            <line>
-                <reportElement x="0" y="2" width="515" height="1" forecolor="#E3E8EF"/>
-            </line>
-            <staticText>
-                <reportElement x="0" y="6" width="300" height="18" forecolor="#64748B"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font size="8" isBold="false" isItalic="false"/>
-                </textElement>
-                <text><![CDATA[Generated by HELMS - confidential, for management use]]></text>
-            </staticText>
-            <textField isBlankWhenNull="true">
-                <reportElement x="300" y="6" width="215" height="18" forecolor="#64748B"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="8" isBold="false"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Printed " + new java.text.SimpleDateFormat("dd MMM yyyy HH:mm").format(new java.util.Date()) + "   |   Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
-            </textField>
+        <line><reportElement x="0" y="2" width="515" height="1" forecolor="#E3E8EF"/></line>
+        <staticText><reportElement x="0" y="6" width="300" height="18" forecolor="#64748B"/><textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="false" isItalic="false"/></textElement><text><![CDATA[Generated by HELMS - confidential, for management use]]></text></staticText>
+        <textField isBlankWhenNull="true"><reportElement x="300" y="6" width="215" height="18" forecolor="#64748B"/><textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="false"/></textElement><textFieldExpression><![CDATA["Printed " + new java.text.SimpleDateFormat("dd MMM yyyy HH:mm").format(new java.util.Date()) + "   |   Page " + $V{PAGE_NUMBER}]]></textFieldExpression></textField>
         </band>
     </pageFooter>
 </jasperReport>
