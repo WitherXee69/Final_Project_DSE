@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../config/database.php';
 
-$userId = (int) $_SESSION['user_id'];
+$userId = $_SESSION['user_id'];
 
 function h($value)
 {
