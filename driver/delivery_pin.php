@@ -1,3 +1,4 @@
+
 <?php
 
 session_start();
@@ -8,8 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/actions/submit_pin.php';
 
-$userId = (int) $_SESSION['user_id'];
+$userId = (string) $_SESSION['user_id'];
 
 function h($value)
 {
@@ -30,31 +32,24 @@ function redirect_dashboard($message, $type = 'success')
 }
 
 if (!isset($_SESSION['driver_csrf_token'])) {
-    $_SESSION['driver_csrf_token'] =
-        bin2hex(random_bytes(32));
+    $_SESSION['driver_csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $csrfToken = $_SESSION['driver_csrf_token'];
 
-$deliveryId = filter_input(
-    INPUT_GET,
-    'delivery_id',
-    FILTER_VALIDATE_INT
+$deliveryId = trim(
+    $_POST['delivery_id'] ?? $_GET['delivery_id'] ?? ''
 );
 
-if (!$deliveryId) {
-    redirect_dashboard(
-        'Invalid delivery.',
-        'error'
-    );
+if ($deliveryId === '' || strlen($deliveryId) > 20) {
+    redirect_dashboard('Invalid delivery.', 'error');
 }
+
+$error = '';
 
 try {
 
-    /*
-     * Confirm that this delivery belongs
-     * to the logged-in driver.
-     */
+    // Retrieve the delivery and confirm driver assignment.
     $deliveryStmt = $pdo->prepare(
         "SELECT de.deliveryId,
                 de.status,
@@ -86,29 +81,33 @@ try {
         exit('You are not assigned to this delivery.');
     }
 
-    $deliveryStatus = strtolower(
+    $deliveryStatus = strtoupper(
         trim($delivery['status'] ?? '')
     );
 
-    if ($deliveryStatus === 'delivered') {
+    if ($deliveryStatus === 'DELIVERED') {
         redirect_dashboard(
             'This delivery has already been completed.'
         );
     }
 
-    if ($deliveryStatus !== 'arrived') {
+    if ($deliveryStatus === 'FAILED') {
+        redirect_dashboard(
+            'This delivery attempt has already failed.',
+            'error'
+        );
+    }
+
+    if ($deliveryStatus !== 'ARRIVED') {
         redirect_dashboard(
             'The delivery must be marked as arrived before entering the PIN.',
             'error'
         );
     }
 
-    /*
-     * Find the latest arrival attempt.
-     */
+    // Confirm that an arrival attempt exists.
     $attemptStmt = $pdo->prepare(
-        "SELECT attemptId,
-                attemptNumber
+        "SELECT attemptId
          FROM DeliveryAttempt
          WHERE deliveryId = :deliveryId
          ORDER BY attemptNumber DESC
@@ -128,11 +127,7 @@ try {
         );
     }
 
-    $error = '';
-
-    /*
-     * submitDeliveryPIN()
-     */
+    // Process the submitted PIN.
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (
@@ -148,141 +143,44 @@ try {
 
         $pin = trim($_POST['pin'] ?? '');
 
-        /*
-         * Demo PIN:
-         * any 4–6 digit numeric value is accepted.
-         */
-        if (!preg_match('/^[0-9]{4,6}$/', $pin)) {
+        try {
 
-            $error =
-                'Please enter a valid 4–6 digit numeric PIN.';
-
-        } else {
-
-            $pdo->beginTransaction();
-
-            /*
-             * Store a hash rather than the plain PIN.
-             */
-            $pinHash = password_hash(
-                $pin,
-                PASSWORD_DEFAULT
+            $message = submitDeliveryPIN(
+                $pdo,
+                $deliveryId,
+                $userId,
+                $pin
             );
 
-            /*
-             * Create the verification record.
-             *
-             * For the current project scope this represents
-             * the demonstration PIN verification.
-             */
-            $verificationStmt = $pdo->prepare(
-                "INSERT INTO DeliveryVerification
-                    (
-                        pinHash,
-                        generatedAt,
-                        expiresAt,
-                        verifiedAt,
-                        attemptCount,
-                        status,
-                        attemptId
-                    )
-                 VALUES
-                    (
-                        :pinHash,
-                        NOW(),
-                        DATE_ADD(NOW(), INTERVAL 15 MINUTE),
-                        NOW(),
-                        1,
-                        'Verified',
-                        :attemptId
-                    )"
-            );
+            // Keep the page open after the first or second failure.
+            if (strpos($message, 'PIN failed.') === 0) {
+                $error = $message;
+            } else {
 
-            $verificationStmt->execute([
-                'pinHash' => $pinHash,
-                'attemptId' => $attempt['attemptId']
-            ]);
+                $type = (
+                    strpos($message, 'unsuccessful') !== false
+                ) ? 'error' : 'success';
 
-            /*
-             * Complete the delivery attempt.
-             */
-            $updateAttempt = $pdo->prepare(
-                "UPDATE DeliveryAttempt
-                 SET outcome = 'Delivered'
-                 WHERE attemptId = :attemptId"
-            );
+                redirect_dashboard($message, $type);
+            }
 
-            $updateAttempt->execute([
-                'attemptId' => $attempt['attemptId']
-            ]);
+        } catch (InvalidArgumentException | RuntimeException $e) {
 
-            /*
-             * Mark delivery as Delivered.
-             */
-            $updateDelivery = $pdo->prepare(
-                "UPDATE Delivery
-                 SET status = 'Delivered'
-                 WHERE deliveryId = :deliveryId"
-            );
+            $error = $e->getMessage();
 
-            $updateDelivery->execute([
-                'deliveryId' => $deliveryId
-            ]);
-
-            /*
-             * Record tracking event.
-             */
-            $trackingStmt = $pdo->prepare(
-                "INSERT INTO TrackingEvent
-                    (
-                        eventType,
-                        occurredAt,
-                        remarks,
-                        actorType,
-                        actorId,
-                        parcelId,
-                        deliveryId
-                    )
-                 VALUES
-                    (
-                        'Delivery Completed',
-                        NOW(),
-                        'Delivery completed after demonstration PIN verification.',
-                        'Driver',
-                        :driverId,
-                        :parcelId,
-                        :deliveryId
-                    )"
-            );
-
-            $trackingStmt->execute([
-                'driverId' => $userId,
-                'parcelId' => $delivery['parcelId'],
-                'deliveryId' => $deliveryId
-            ]);
-
-            $pdo->commit();
-
-            redirect_dashboard(
-                'Delivery #' . $deliveryId .
-                ' has been successfully completed.'
-            );
         }
     }
 
 } catch (PDOException $e) {
 
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    error_log('Delivery PIN page error: ' . $e->getMessage());
 
-    error_log(
-        'Delivery PIN error: ' . $e->getMessage()
+    redirect_dashboard(
+        'The delivery information could not be loaded.',
+        'error'
     );
-
-    $error =
-        'The delivery could not be completed right now.';
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -291,6 +189,7 @@ try {
 <head>
 
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1"
@@ -324,40 +223,83 @@ try {
         href="../assets/css/driver-dashboard.css"
     >
 
+    <link 
+        rel="stylesheet" href="../assets/css/driver-dashboard.css"
+    >
+
+    <link
+        rel="stylesheet" href="../assets/css/delivery-pin.css"
+    >
+
 </head>
 
-<body class="driver-body">
+<body class="driver-dashboard-page">
 
 <header class="driver-header">
 
-    <div class="container nav">
+    <div class="container driver-nav">
 
         <a
-            href="driver_dashboard.php"
+            href="../index.php"
             class="brand"
         >
+
             <div class="logo">H</div>
 
             <div>
                 <b>HELMS</b>
                 <small>Henowic Inventors (Pvt) Ltd.</small>
             </div>
+
         </a>
 
-        <a
-            class="driver-logout"
-            href="driver_dashboard.php"
-        >
-            Back to dashboard
-        </a>
+        <nav class="driver-menu">
+
+            <a href="driver_dashboard.php">
+                Dashboard
+            </a>
+
+            <a href="driver_dashboard.php#manifests">
+                My manifests
+            </a>
+
+            <a href="driver_dashboard.php#pickups">
+                Pickups
+            </a>
+
+            <a href="driver_dashboard.php#deliveries">
+                Deliveries
+            </a>
+
+        </nav>
+
+        <div class="driver-account">
+
+            <span class="driver-avatar">
+                <?= h(strtoupper(substr($userId, 0, 1))) ?>
+            </span>
+
+            <span class="driver-account-name">
+                <?= h($userId) ?>
+            </span>
+
+            <a
+                class="driver-logout"
+                href="../logout.php"
+            >
+                Logout
+            </a>
+
+        </div>
 
     </div>
 
 </header>
 
-<main class="driver-main container">
 
-    <div class="driver-page-heading">
+<main class="container driver-main">
+
+    <div class="pin-page-heading">
 
         <div>
 
@@ -367,62 +309,85 @@ try {
 
             <h1>Submit Delivery PIN</h1>
 
+            <p>
+                Verify the receiver's PIN to complete the delivery.
+            </p>
+
         </div>
 
-        <div class="driver-date">
-            Delivery #<?= h($deliveryId) ?>
+        <div class="pin-delivery-reference">
+            DELIVERY #<?= h($deliveryId) ?>
         </div>
 
     </div>
 
 
-    <section class="driver-pin-card">
+    <section class="pin-card">
 
-        <div class="driver-pin-icon">
-            ✓
-        </div>
+        <div class="pin-card-heading">
 
-        <h2>Confirm the delivery</h2>
-
-        <p>
-            The receiver provides a PIN when the parcel is handed over.
-            Enter the PIN below to complete this delivery.
-        </p>
-
-        <div class="driver-pin-details">
+            <div class="pin-icon">
+                ✓
+            </div>
 
             <div>
+
+                <h2>Confirm parcel handover</h2>
+
+                <p>
+                    Ask the receiver for their PIN and enter it below
+                    to confirm successful delivery.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="pin-details">
+
+            <div class="pin-detail">
+
                 <span>Receiver</span>
+
                 <strong>
                     <?= h(
-                        $delivery['receiverName']
-                        ?: 'Not provided'
+                        $delivery['receiverName'] ?: 'Not provided'
                     ) ?>
                 </strong>
+
             </div>
 
-            <div>
+
+            <div class="pin-detail">
+
+                <span>Parcel ID</span>
+
+                <strong>
+                    <?= h($delivery['parcelId']) ?>
+                </strong>
+
+            </div>
+
+
+            <div class="pin-detail">
+
                 <span>Delivery address</span>
+
                 <strong>
                     <?= h(
-                        $delivery['deliveryAddress']
-                        ?: 'Not specified'
+                        $delivery['deliveryAddress'] ?: 'Not specified'
                     ) ?>
                 </strong>
-            </div>
 
-            <div>
-                <span>Parcel</span>
-                <strong>
-                    #<?= h($delivery['parcelId']) ?>
-                </strong>
             </div>
 
         </div>
+
 
         <?php if ($error): ?>
 
-            <div class="driver-action-error">
+            <div class="driver-action-message error pin-feedback">
                 <?= h($error) ?>
             </div>
 
@@ -431,13 +396,19 @@ try {
 
         <form
             method="POST"
-            class="driver-pin-form"
+            class="pin-form"
         >
 
             <input
                 type="hidden"
                 name="csrf_token"
                 value="<?= h($csrfToken) ?>"
+            >
+
+            <input
+                type="hidden"
+                name="delivery_id"
+                value="<?= h($deliveryId) ?>"
             >
 
             <label for="pin">
@@ -449,31 +420,41 @@ try {
                 id="pin"
                 name="pin"
                 inputmode="numeric"
-                pattern="[0-9]{4,6}"
-                minlength="4"
+                pattern="[0-9]{3,6}"
+                minlength="3"
                 maxlength="6"
                 autocomplete="off"
-                placeholder="Enter 4–6 digit PIN"
+                placeholder="Enter receiver PIN"
                 required
+                autofocus
             >
 
-            <small>
-                Demonstration mode: any valid 4–6 digit
-                numeric PIN will be accepted.
-            </small>
+            <p class="pin-help">
+                Enter the PIN provided by the receiver.
+                You have a maximum of three attempts.
+            </p>
 
             <button
                 type="submit"
                 class="driver-action-button driver-action-primary"
             >
-                Verify PIN &amp; Complete Delivery
+                Verify PIN and complete delivery
             </button>
 
         </form>
 
+
+        <a
+            href="driver_dashboard.php"
+            class="pin-back-link"
+        >
+            &larr; Back to dashboard
+        </a>
+
     </section>
 
 </main>
+
 
 <footer class="driver-footer">
 
@@ -493,5 +474,4 @@ try {
 </footer>
 
 </body>
-
 </html>

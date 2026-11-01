@@ -9,7 +9,16 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../config/database.php';
 
-$userId = (int) $_SESSION['user_id'];
+// Keep user IDs as strings because the database uses VARCHAR IDs.
+$driverId = (string) $_SESSION['user_id'];
+
+// Load the driver action functions.
+require_once __DIR__ . '/actions/update_availability.php';
+require_once __DIR__ . '/actions/view_driver_manifest.php';
+require_once __DIR__ . '/actions/mark_pickup_successful.php';
+require_once __DIR__ . '/actions/mark_pickup_failed.php';
+require_once __DIR__ . '/actions/mark_delivery_arrived.php';
+require_once __DIR__ . '/actions/submit_pin.php';
 
 function redirect_dashboard($message, $type = 'success')
 {
@@ -35,47 +44,15 @@ function verify_csrf()
     }
 }
 
-function get_driver_manifest_for_pickup($pdo, $pickupId, $driverId)
+function get_posted_id($field)
 {
-    $stmt = $pdo->prepare(
-        "SELECT p.pickupId
-         FROM Pickup p
-         INNER JOIN DriverManifest dm
-            ON dm.driverManifestId = p.driverManifestId
-         WHERE p.pickupId = :pickupId
-           AND dm.driverId = :driverId
-         LIMIT 1"
-    );
+    $id = trim($_POST[$field] ?? '');
 
-    $stmt->execute([
-        'pickupId' => $pickupId,
-        'driverId' => $driverId
-    ]);
+    if ($id === '' || strlen($id) > 20) {
+        return false;
+    }
 
-    return $stmt->fetch();
-}
-
-function get_driver_delivery($pdo, $deliveryId, $driverId)
-{
-    $stmt = $pdo->prepare(
-        "SELECT de.deliveryId,
-                de.status,
-                de.parcelId,
-                de.failedAttemptCount
-         FROM Delivery de
-         INNER JOIN DriverManifest dm
-            ON dm.driverManifestId = de.driverManifestId
-         WHERE de.deliveryId = :deliveryId
-           AND dm.driverId = :driverId
-         LIMIT 1"
-    );
-
-    $stmt->execute([
-        'deliveryId' => $deliveryId,
-        'driverId' => $driverId
-    ]);
-
-    return $stmt->fetch();
+    return $id;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -89,293 +66,78 @@ $action = $_POST['action'] ?? '';
 
 try {
 
-    /*
-     * updateAvailability()
-     */
+    // Update driver availability.
     if ($action === 'update_availability') {
 
         $status = $_POST['status'] ?? '';
 
-        $allowedStatuses = [
-            'Available',
-            'Unavailable'
-        ];
-
-        if (!in_array($status, $allowedStatuses, true)) {
-            redirect_dashboard(
-                'Invalid availability status.',
-                'error'
-            );
-        }
-
-        $stmt = $pdo->prepare(
-            "UPDATE Driver
-             SET status = :status
-             WHERE userId = :driverId"
+        $message = updateAvailability(
+            $pdo,
+            $driverId,
+            $status
         );
 
-        $stmt->execute([
-            'status' => $status,
-            'driverId' => $userId
-        ]);
-
-        redirect_dashboard(
-            'Your availability has been updated.'
-        );
+        redirect_dashboard($message);
     }
 
-
-    /*
-     * markPickupSuccessful()
-     */
+    // Mark a pickup as successfully completed.
     if ($action === 'pickup_success') {
 
-        $pickupId = filter_input(
-            INPUT_POST,
-            'pickup_id',
-            FILTER_VALIDATE_INT
-        );
+        $pickupId = get_posted_id('pickup_id');
 
-        if (!$pickupId) {
-            redirect_dashboard(
-                'Invalid pickup.',
-                'error'
-            );
+        if ($pickupId === false) {
+            redirect_dashboard('Invalid pickup ID.', 'error');
         }
 
-        $pickup = get_driver_manifest_for_pickup(
+        $message = markPickupSuccessful(
             $pdo,
             $pickupId,
-            $userId
+            $driverId
         );
 
-        if (!$pickup) {
-            http_response_code(403);
-            exit('You are not assigned to this pickup.');
-        }
-
-        $stmt = $pdo->prepare(
-            "UPDATE Pickup
-             SET status = 'Completed',
-                 failureReason = NULL
-             WHERE pickupId = :pickupId"
-        );
-
-        $stmt->execute([
-            'pickupId' => $pickupId
-        ]);
-
-        redirect_dashboard(
-            'Pickup #' . $pickupId . ' has been marked as completed.'
-        );
+        redirect_dashboard($message);
     }
 
-
-    /*
-     * markPickupFailed()
-     */
+    // Mark a pickup as failed.
     if ($action === 'pickup_failed') {
 
-        $pickupId = filter_input(
-            INPUT_POST,
-            'pickup_id',
-            FILTER_VALIDATE_INT
-        );
+        $pickupId = get_posted_id('pickup_id');
+
+        if ($pickupId === false) {
+            redirect_dashboard('Invalid pickup ID.', 'error');
+        }
 
         $failureReason = trim(
             $_POST['failure_reason'] ?? ''
         );
 
-        if (!$pickupId) {
-            redirect_dashboard(
-                'Invalid pickup.',
-                'error'
-            );
-        }
-
-        if ($failureReason === '') {
-            redirect_dashboard(
-                'Please provide a reason for the failed pickup.',
-                'error'
-            );
-        }
-
-        if (strlen($failureReason) > 255) {
-            redirect_dashboard(
-                'The pickup failure reason is too long.',
-                'error'
-            );
-        }
-
-        $pickup = get_driver_manifest_for_pickup(
+        $message = markPickupFailed(
             $pdo,
             $pickupId,
-            $userId
+            $driverId,
+            $failureReason
         );
 
-        if (!$pickup) {
-            http_response_code(403);
-            exit('You are not assigned to this pickup.');
-        }
-
-        $stmt = $pdo->prepare(
-            "UPDATE Pickup
-             SET status = 'Failed',
-                 failureReason = :failureReason
-             WHERE pickupId = :pickupId"
-        );
-
-        $stmt->execute([
-            'failureReason' => $failureReason,
-            'pickupId' => $pickupId
-        ]);
-
-        redirect_dashboard(
-            'Pickup #' . $pickupId . ' has been marked as failed.'
-        );
+        redirect_dashboard($message);
     }
 
-
-    /*
-     * markDeliveryArrived()
-     */
+    // Mark a delivery as arrived and open the PIN page.
     if ($action === 'delivery_arrived') {
 
-        $deliveryId = filter_input(
-            INPUT_POST,
-            'delivery_id',
-            FILTER_VALIDATE_INT
-        );
+        $deliveryId = get_posted_id('delivery_id');
 
-        if (!$deliveryId) {
-            redirect_dashboard(
-                'Invalid delivery.',
-                'error'
-            );
+        if ($deliveryId === false) {
+            redirect_dashboard('Invalid delivery ID.', 'error');
         }
 
-        $delivery = get_driver_delivery(
+        $message = markDeliveryArrived(
             $pdo,
             $deliveryId,
-            $userId
+            $driverId
         );
 
-        if (!$delivery) {
-            http_response_code(403);
-            exit('You are not assigned to this delivery.');
-        }
-
-        $currentStatus = strtolower(
-            trim($delivery['status'] ?? '')
-        );
-
-        if ($currentStatus === 'delivered') {
-            redirect_dashboard(
-                'This delivery has already been completed.',
-                'error'
-            );
-        }
-
-        if ($currentStatus === 'arrived') {
-            header(
-                'Location: delivery_pin.php?delivery_id=' .
-                urlencode($deliveryId)
-            );
-            exit;
-        }
-
-        $pdo->beginTransaction();
-
-        /*
-         * Find the next attempt number.
-         */
-        $attemptStmt = $pdo->prepare(
-            "SELECT COALESCE(MAX(attemptNumber), 0) + 1
-             FROM DeliveryAttempt
-             WHERE deliveryId = :deliveryId"
-        );
-
-        $attemptStmt->execute([
-            'deliveryId' => $deliveryId
-        ]);
-
-        $attemptNumber = (int) $attemptStmt->fetchColumn();
-
-        /*
-         * Create the delivery attempt.
-         */
-        $insertAttempt = $pdo->prepare(
-            "INSERT INTO DeliveryAttempt
-                (
-                    attemptNumber,
-                    attemptedAt,
-                    arrivedAt,
-                    outcome,
-                    deliveryId
-                )
-             VALUES
-                (
-                    :attemptNumber,
-                    NOW(),
-                    NOW(),
-                    'Arrived',
-                    :deliveryId
-                )"
-        );
-
-        $insertAttempt->execute([
-            'attemptNumber' => $attemptNumber,
-            'deliveryId' => $deliveryId
-        ]);
-
-        $attemptId = (int) $pdo->lastInsertId();
-
-        /*
-         * Mark the delivery as arrived.
-         */
-        $updateDelivery = $pdo->prepare(
-            "UPDATE Delivery
-             SET status = 'Arrived'
-             WHERE deliveryId = :deliveryId"
-        );
-
-        $updateDelivery->execute([
-            'deliveryId' => $deliveryId
-        ]);
-
-        /*
-         * Record the tracking event.
-         */
-        $trackingStmt = $pdo->prepare(
-            "INSERT INTO TrackingEvent
-                (
-                    eventType,
-                    occurredAt,
-                    remarks,
-                    actorType,
-                    actorId,
-                    parcelId,
-                    deliveryId
-                )
-             VALUES
-                (
-                    'Delivery Arrived',
-                    NOW(),
-                    'Driver marked the delivery as arrived.',
-                    'Driver',
-                    :driverId,
-                    :parcelId,
-                    :deliveryId
-                )"
-        );
-
-        $trackingStmt->execute([
-            'driverId' => $userId,
-            'parcelId' => $delivery['parcelId'],
-            'deliveryId' => $deliveryId
-        ]);
-
-        $pdo->commit();
+        $_SESSION['driver_message'] = $message;
+        $_SESSION['driver_message_type'] = 'success';
 
         header(
             'Location: delivery_pin.php?delivery_id=' .
@@ -384,25 +146,24 @@ try {
         exit;
     }
 
+    redirect_dashboard('Unknown driver action.', 'error');
 
-    redirect_dashboard(
-        'Unknown driver action.',
-        'error'
-    );
+} catch (InvalidArgumentException | RuntimeException $e) {
 
-} catch (PDOException $e) {
+    redirect_dashboard($e->getMessage(), 'error');
+
+} catch (Throwable $e) {
 
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
 
-    error_log(
-        'Driver action error: ' . $e->getMessage()
-    );
+    error_log('Driver action error: ' . $e->getMessage());
 
     redirect_dashboard(
         'The requested action could not be completed.',
         'error'
     );
 }
+
 ?>
