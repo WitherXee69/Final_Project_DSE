@@ -1,6 +1,6 @@
 <?php
 
-require_once 'config/database.php';
+require_once '../config/database.php';
 
 $search = $_GET['search'] ?? '';
 
@@ -16,8 +16,6 @@ $totalCustomers = $pdo->query("SELECT COUNT(*) FROM Customer")->fetchColumn();
 
 $corporateCustomers = $pdo->query("SELECT COUNT(*) FROM CorporateCustomer")->fetchColumn();
 
-$activeAgreements = $pdo->query("SELECT COUNT(*) FROM CorporateAgreement")->fetchColumn();
-
 $individualCustomers = $totalCustomers - $corporateCustomers;
 
 ?>
@@ -31,8 +29,8 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
 
     <title>Customer Service Manager Portal | HELMS</title>
 
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/customer_service_dashboard.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/customer_service_dashboard.css">
 
 </head>
 
@@ -63,8 +61,6 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
 
                 <a class="link" href="#">Corporate</a>
 
-                <a class="link" href="view_agreements.php">Agreements</a>
-
                 <a class="btn btn-ghost" href="index.php">Home</a>
 
             </nav>
@@ -86,12 +82,11 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
                     <span>Customer Service Manager</span>
                 </h1>
 
-                <p>Manage individual customers, corporate customers, customer agreements and customer records from one central HELMS workspace.</p>
+                <p>Manage individual customers, corporate customers and customer records from one central HELMS workspace.</p>
 
                 <div class="csm-buttons">
 
-                    <a href="register_corporate_customer.php" class="btn btn-primary">Register Corporate Customer</a>
-                    <a href="view_agreements.php" class="btn btn-primary">View Agreements</a>                    
+                    <a href="register_corporate_customer.php" class="btn btn-primary">Register Corporate Customer</a>                   
 
                 </div>
 
@@ -126,13 +121,6 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
                     <div class="icon">👤</div>
                     <div class="number"><?= $individualCustomers ?></div>
                     <div class="label">Individual Customers</div>
-
-                </div>
-
-                <div class="stat-card">
-                    <div class="icon">📄</div>
-                    <div class="number"><?= $activeAgreements ?></div>
-                    <div class="label">Active Agreements</div>
 
                 </div>
 
@@ -230,17 +218,6 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
                     <br>
 
                     <a href="deactivate_customer.php" class="btn btn-primary">Deactivate Customer</a>
-
-                </div>
-
-                <div class="action-card">
-
-                    <h4>View Agreements</h4>
-                    <p>View corporate agreements and contract details.</p>
-
-                    <br>
-
-                    <a href="view_agreements.php" class="btn btn-primary">View Agreements</a>
 
                 </div>
 
