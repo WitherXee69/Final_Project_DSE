@@ -11,9 +11,97 @@
  */
 session_start();
 
+require_once __DIR__ . '/config/database.php';
+
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName   = $_SESSION['full_name'] ?? '';
 $userRole   = $_SESSION['role'] ?? '';
+
+// Parcel tracking variables
+$trackingResult = null;
+$trackingEvents = [];
+$trackingError = '';
+$trackingId = '';
+
+// Handle tracking form submission on this same page
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['track_parcel'])) {
+
+    $trackingId = strtoupper(trim($_POST['id'] ?? ''));
+
+    if (!preg_match('/^HEN-[0-9]{4}-[0-9]{6}$/', $trackingId)) {
+
+        $trackingError = 'Please enter a valid tracking number.';
+
+    } else {
+
+        try {
+            // Find the parcel
+            $stmt = $pdo->prepare("
+                SELECT parcelId, status
+                FROM Parcel
+                WHERE parcelId = :parcelId
+                LIMIT 1
+            ");
+
+            $stmt->execute([
+                ':parcelId' => $trackingId
+            ]);
+
+            $trackingResult = $stmt->fetch();
+
+            if (!$trackingResult) {
+
+                $trackingError = 'No parcel was found with that tracking number.';
+
+            } else {
+
+                // Retrieve only events visible to the receiver
+                $eventStmt = $pdo->prepare("
+                    SELECT eventType, occurredAt, locationDescription
+                    FROM TrackingEvent
+                    WHERE parcelId = :parcelId
+                    AND isVisibleToReceiver = 1
+                    ORDER BY occurredAt ASC
+                ");
+
+                $eventStmt->execute([
+                    ':parcelId' => $trackingId
+                ]);
+
+                $trackingEvents = $eventStmt->fetchAll();
+            }
+
+        } catch (PDOException $e) {
+
+            error_log('Parcel tracking error: ' . $e->getMessage());
+
+            $trackingError = 'Unable to retrieve tracking information right now. Please try again later.';
+        }
+    }
+}
+
+// Convert database status values into readable labels
+function formatTrackingStatus($status)
+{
+    $statuses = [
+        'PICKED_UP' => 'Picked Up',
+        'RECEIVED_AT_WAREHOUSE' => 'Received at Warehouse',
+        'IN_WAREHOUSE' => 'In Warehouse',
+        'DETAILS_CONFIRMED' => 'Parcel Details Confirmed',
+        'PACKED' => 'Packed',
+        'RELEASED_TO_SENDER' => 'Released to Sender',
+        'IN_TRANSIT' => 'In Transit',
+        'OUT_FOR_DELIVERY' => 'Out for Delivery',
+        'DELIVERED' => 'Delivered',
+        'FAILED_DELIVERY' => 'Delivery Failed',
+        'DELIVERY_FAILED' => 'Delivery Failed',
+        'RETURNED' => 'Returned',
+        'CANCELLED' => 'Cancelled',
+        'ON_HOLD' => 'On Hold'
+    ];
+
+    return $statuses[$status] ?? ucwords(strtolower(str_replace('_', ' ', $status)));
+}
 
 $services = [
     ['Standard Delivery',   'Reliable island-wide domestic parcel delivery.',                      'M3 7h11v9H3zM14 10h4l3 3v3h-7z'],
@@ -34,14 +122,14 @@ $staffRoles = [
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HELMS | Henowic Inventors Logistics</title>
-<meta name="description" content="Henowic Enterprise Logistics Management System - request pickups, track parcels and manage logistics operations.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELMS | Henowic Inventors Logistics</title>
+  <meta name="description" content="Henowic Enterprise Logistics Management System - request pickups, track parcels and manage logistics operations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -56,10 +144,15 @@ $staffRoles = [
   <div class="container nav">
     <a href="index.php" class="brand">
       <div class="logo">H</div>
-      <div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div>
+      <div>
+        <b>HELMS</b>
+        <small>Henowic Inventors (Pvt) Ltd.</small>
+      </div>
     </a>
     <button class="burger" id="burger" aria-label="Menu">
-      <svg class="i" viewBox="0 0 24 24" style="width:28px;height:28px"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="i" viewBox="0 0 24 24" style="width:28px;height:28px">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
     </button>
     <nav class="menu" id="menu">
       <a class="link" href="#portals">Portals</a>
@@ -93,22 +186,100 @@ $staffRoles = [
     </div>
 
     <!-- Public tracking -->
-    <div class="track">
+    <div class="track" id="tracking">
       <h3>
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         Track your parcel
       </h3>
       <p>Enter your tracking number to see the latest status.</p>
-      <form action="track.php" method="get" class="field" id="trackForm">
-        <input type="text" name="id" id="trackId" placeholder="e.g. HEN-2026-000123" required maxlength="30" autocomplete="off">
-        <button class="btn btn-primary" type="submit">Track</button>
-      </form>
-      <div class="steps">
-        <div class="step done"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12l5 5 9-10"/></svg></div>Picked up</div>
-        <div class="step done"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12l5 5 9-10"/></svg></div>In warehouse</div>
-        <div class="step now"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/></svg></div>Out for delivery</div>
-        <div class="step"><div class="dot"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/></svg></div>Delivered</div>
-      </div>
+      <form action="index.php#tracking" method="POST" class="field" id="trackForm">
+    <input
+        type="text"
+        name="id"
+        id="trackId"
+        placeholder="e.g. HEN-2026-000123"
+        required
+        maxlength="30"
+        autocomplete="off"
+        value="<?= htmlspecialchars($trackingId) ?>"
+    >
+
+    <button class="btn btn-primary" type="submit" name="track_parcel">
+        Track
+    </button>
+</form>
+
+<?php if ($trackingError): ?>
+
+    <div class="tracking-message error">
+        <?= htmlspecialchars($trackingError) ?>
+    </div>
+
+<?php endif; ?>
+
+
+<?php if ($trackingResult): ?>
+
+    <div class="tracking-result">
+
+        <div class="tracking-result-header">
+            <div>
+                <small>TRACKING NUMBER</small>
+                <h4><?= htmlspecialchars($trackingResult['parcelId']) ?></h4>
+            </div>
+
+            <span class="tracking-status">
+                <?= htmlspecialchars(formatTrackingStatus($trackingResult['status'])) ?>
+            </span>
+        </div>
+
+        <div class="tracking-timeline">
+
+            <h4>Tracking History</h4>
+
+            <?php if (count($trackingEvents) > 0): ?>
+
+                <?php foreach ($trackingEvents as $event): ?>
+
+                    <div class="tracking-event">
+
+                        <div class="tracking-event-marker"></div>
+
+                        <div class="tracking-event-content">
+
+                            <strong>
+                                <?= htmlspecialchars(formatTrackingStatus($event['eventType'])) ?>
+                            </strong>
+
+                            <p>
+                                <?= htmlspecialchars($event['locationDescription'] ?: 'Location not specified') ?>
+                            </p>
+
+                            <small>
+                                <?= htmlspecialchars(date('d M Y, h:i A', strtotime($event['occurredAt']))) ?>
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <p class="no-tracking-events">
+                    No public tracking updates are available yet.
+                </p>
+
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
+<?php endif; ?>
+
+<div id="trackResult" class="track-result" aria-live="polite"></div>
     </div>
   </div>
 </section>
@@ -119,13 +290,27 @@ $staffRoles = [
 
     <!-- Customers -->
     <article class="portal">
-      <div class="ico c1"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="ico c1">
+        <svg class="i" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
       <h3>Customers</h3>
       <p>Individual and corporate customers.</p>
       <ul>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Request and manage pickups &amp; deliveries</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Track delivery status in real time</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Corporate users can view agreements</li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Request and manage pickups &amp; deliveries
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Track delivery status in real time
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Corporate users can view agreements
+        </li>
       </ul>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=customer">Login</a>
@@ -135,11 +320,18 @@ $staffRoles = [
 
     <!-- Staff -->
     <article class="portal">
-      <div class="ico c2"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"/></svg></div>
+      <div class="ico c2">
+        <svg class="i" viewBox="0 0 24 24">
+          <rect x="3" y="7" width="18" height="13" rx="2"/>
+          <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"/>
+        </svg>
+      </div>
       <h3>Staff &amp; Management</h3>
       <p>Secure access for Henowic employees.</p>
       <div class="chips">
-        <?php foreach ($staffRoles as $r): ?><span><?= htmlspecialchars($r) ?></span><?php endforeach; ?>
+        <?php foreach ($staffRoles as $r): ?>
+          <span><?= htmlspecialchars($r) ?></span>
+        <?php endforeach; ?>
       </div>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=staff">Staff Login</a>
@@ -148,13 +340,28 @@ $staffRoles = [
 
     <!-- Drivers -->
     <article class="portal">
-      <div class="ico c3"><svg class="i" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></div>
+      <div class="ico c3">
+        <svg class="i" viewBox="0 0 24 24">
+          <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
+          <circle cx="7" cy="18" r="1.6"/>
+          <circle cx="17" cy="18" r="1.6"/>
+        </svg>
+      </div>
       <h3>Drivers</h3>
       <p>Your daily work, simplified.</p>
       <ul>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>View assigned manifests &amp; parcels</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Update delivery &amp; pickup status</li>
-        <li><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Record COD payments &amp; availability</li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          View assigned manifests &amp; parcels
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Update delivery &amp; pickup status
+        </li>
+        <li>
+          <svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+          Record COD payments &amp; availability
+        </li>
       </ul>
       <div class="actions">
         <a class="btn btn-primary" href="login.php?portal=driver">Driver Login</a>
@@ -192,11 +399,26 @@ $staffRoles = [
       <h2>Five simple steps from booking to doorstep</h2>
     </div>
     <div class="flow">
-      <div class="f"><h4>Book</h4><p>Register and create a pickup or delivery request.</p></div>
-      <div class="f"><h4>Collect</h4><p>A driver and vehicle are assigned to pick up your parcel.</p></div>
-      <div class="f"><h4>Store</h4><p>Parcel is received and located in our Colombo warehouse.</p></div>
-      <div class="f"><h4>Deliver</h4><p>Dispatched via a delivery manifest to the receiver.</p></div>
-      <div class="f"><h4>Pay &amp; Receipt</h4><p>Invoices, COD and receipts are recorded automatically.</p></div>
+      <div class="f">
+        <h4>Book</h4>
+        <p>Register and create a pickup or delivery request.</p>
+      </div>
+      <div class="f">
+        <h4>Collect</h4>
+        <p>A driver and vehicle are assigned to pick up your parcel.</p>
+      </div>
+      <div class="f">
+        <h4>Store</h4>
+        <p>Parcel is received and located in our Colombo warehouse.</p>
+      </div>
+      <div class="f">
+        <h4>Deliver</h4>
+        <p>Dispatched via a delivery manifest to the receiver.</p>
+      </div>
+      <div class="f">
+        <h4>Pay &amp; Receipt</h4>
+        <p>Invoices, COD and receipts are recorded automatically.</p>
+      </div>
     </div>
 
     <div class="band" style="margin-top:64px">
@@ -221,7 +443,13 @@ $staffRoles = [
   <div class="container">
     <div class="f-grid">
       <div>
-        <div class="brand" style="margin-bottom:14px"><div class="logo">H</div><div><b>HELMS</b><small>Henowic Inventors (Pvt) Ltd.</small></div></div>
+        <div class="brand" style="margin-bottom:14px">
+          <div class="logo">H</div>
+          <div>
+            <b>HELMS</b>
+            <small>Henowic Inventors (Pvt) Ltd.</small>
+          </div>
+        </div>
         <p style="font-size:.88rem">Reliable, organized domestic parcel delivery across Sri Lanka.</p>
       </div>
       <div>
