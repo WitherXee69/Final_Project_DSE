@@ -6,6 +6,8 @@ $search = $_GET['search'] ?? '';
 
 $customer = null;
 
+$error = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST['action'] ?? '') === 'delete') {
 
     $userId = $_POST['userId'];
@@ -44,14 +46,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST['action'] ?? '') === 'delete
     }
 }
 
-if (!empty($search)) {
+if (!empty($search) && !preg_match('/^USR-[0-9]{6}$/', $search)) {
 
-                    $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, c.address, ic.name AS individualName, ic.nic, cc.companyName, cc.contactPerson FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId = ?");
+    $error = "Please enter a valid Customer ID (e.g. USR-000013).";
 
-                    $stmt->execute([$search]);
+} elseif (!empty($search)) {
 
-                    $customer = $stmt->fetch();
-                }
+    $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, c.address, ic.name AS individualName, ic.nic, cc.companyName, cc.contactPerson FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId = ?");
+
+    $stmt->execute([$search]);
+
+    $customer = $stmt->fetch();
+
+    if (!$customer) {
+
+        $error = "Customer not found.";
+
+    }
+
+}
 
 ?>
 
@@ -155,6 +168,13 @@ if (!empty($search)) {
                 <p>Enter a Customer ID to load customer information.</p>
 
             </div>
+
+            <?php if (!empty($error)): ?>
+
+                <div class="login-notice show"><?= $error ?></div>
+                <br>
+                
+            <?php endif; ?>
 
             <form class="login-form" method="get">
 

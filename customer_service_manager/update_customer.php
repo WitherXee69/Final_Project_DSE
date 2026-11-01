@@ -6,6 +6,8 @@ $search = $_GET['search'] ?? '';
 
 $customer = null;
 
+$error = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST['action'] ?? '') === 'update') {
 
     $userId = $_POST['userId'];
@@ -16,42 +18,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST['action'] ?? '') === 'update
     $contactPerson = trim($_POST['contactPerson'] ?? '');
     $nic = trim($_POST['nic'] ?? '');
 
-    $updateCustomer = $pdo->prepare("UPDATE Customer SET email = ?, contactNumber = ?, address = ? WHERE userId = ?");
+    if (strlen($customerName) < 3) {
 
-    $updateCustomer->execute([$email, $contactNumber, $address, $userId]);
+        $error = "Name / Company Name must contain at least 3 characters.";
 
-    if (!empty($contactPerson)) {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-        $updateCorporate = $pdo->prepare("UPDATE CorporateCustomer SET companyName = ?, contactPerson = ? WHERE userId = ?");
+        $error = "Please enter a valid email address.";
 
-        $updateCorporate->execute([$customerName, $contactPerson, $userId]);
+    } elseif (!preg_match("/^07[0-9]{8}$/", $contactNumber)) {
 
-    } else {
+    $error = "Please enter a valid contact number.";
 
-        $updateIndividual = $pdo->prepare("UPDATE IndividualCustomer SET name = ?, nic = ? WHERE userId = ?");
+    } elseif (!empty($contactPerson) && !preg_match("/^[A-Za-z ]+$/", $contactPerson)) {
 
-        $updateIndividual->execute([$customerName, $nic, $userId]);
+        $error = "Contact person name can only contain letters and spaces.";
+
     }
 
-    echo "<script> alert('Customer updated successfully.'); </script>";
+    if(empty($error)) {
 
-    $search = $userId;
+        $updateCustomer = $pdo->prepare("UPDATE Customer SET email = ?, contactNumber = ?, address = ? WHERE userId = ?");
+        $updateCustomer->execute([$email, $contactNumber, $address, $userId]);
 
-    $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, c.address, ic.name AS individualName, ic.nic, cc.companyName, cc.contactPerson FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId = ?");
+        if (!empty($contactPerson)) {
 
-    $stmt->execute([$search]);
+            $updateCorporate = $pdo->prepare("UPDATE CorporateCustomer SET companyName = ?, contactPerson = ? WHERE userId = ?");
+            $updateCorporate->execute([$customerName, $contactPerson, $userId]);
 
-    $customer = $stmt->fetch();
+        } else {
+
+            $updateIndividual = $pdo->prepare("UPDATE IndividualCustomer SET name = ?, nic = ? WHERE userId = ?");
+            $updateIndividual->execute([$customerName, $nic, $userId]);
+        }
+
+        echo "<script> alert('Customer updated successfully.'); </script>";
+
+        $search = $userId;
+
+        $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, c.address, ic.name AS individualName, ic.nic, cc.companyName, cc.contactPerson FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId = ?");
+
+        $stmt->execute([$search]);
+
+        $customer = $stmt->fetch();
+
+    }
 
 }
 
-if (!empty($search)) {
+if (!empty($search) && !preg_match('/^USR-[0-9]{6}$/', $search)) {
+
+    $error = "Please enter a valid Customer ID (e.g. USR-000013).";
+
+} elseif (!empty($search)) {
 
     $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, c.address, ic.name AS individualName, ic.nic, cc.companyName, cc.contactPerson FROM Customer c LEFT JOIN IndividualCustomer ic ON c.userId = ic.userId LEFT JOIN CorporateCustomer cc ON c.userId = cc.userId WHERE c.userId = ?");
 
     $stmt->execute([$search]);
 
     $customer = $stmt->fetch();
+
+    if (!$customer && !empty($search)) {
+
+        $error = "Customer not found.";
+            
+    }
+
 }
 
 ?>
@@ -154,6 +186,13 @@ if (!empty($search)) {
 
             </div>
 
+            <?php if (!empty($error)): ?>
+
+                <div class="login-notice show"><?= $error ?></div>
+                <br>
+
+            <?php endif; ?>
+
             <form class="login-form" method="get">
 
                 <div class="form-row">
@@ -229,7 +268,7 @@ if (!empty($search)) {
                     <div style="display:flex; gap:10px;">
 
                             <button class="btn btn-primary login-submit" type="submit">Update Customer</button>
-                            <button style="background: #0b1f3a; color:white;" class="btn btn-primary" type="button" onclick="window.location.href='deactivate_customer.php'">Clear</button>
+                            <button style="background: #0b1f3a; color:white;" class="btn btn-primary" type="button" onclick="window.location.href='update_customer.php'">Clear</button>
 
                         </div>
 

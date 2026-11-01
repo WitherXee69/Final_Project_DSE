@@ -14,7 +14,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"];
     $confirmPassword = $_POST["confirmPassword"];
 
-    if ($password !== $confirmPassword) {
+    if (strlen($companyName) < 3) {
+
+        $error = "Name / Company Name must contain at least 3 characters.";
+
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        $error = "Please enter a valid email address.";
+
+    } elseif (!preg_match("/^07[0-9]{8}$/", $contactNumber)) {
+
+        $error = "Please enter a valid contact number.";
+
+    } elseif (!preg_match("/^[A-Za-z ]+$/", $contactPerson)) {
+
+        $error = "Contact person name can only contain letters and spaces.";
+
+    } elseif (strlen($username) < 4) {
+
+        $error = "Username must contain at least 4 characters.";
+
+    } elseif (strlen($password) < 8) {
+
+        $error = "Password must contain at least 8 characters.";
+
+    } elseif ($password !== $confirmPassword) {
 
         $error = "Passwords do not match.";
 

@@ -2,6 +2,8 @@
 
 require_once '../config/database.php';
 
+$error = '';
+
 $search = $_GET['search'] ?? '';
 
 $searchTerm = "%" . $search . "%";
@@ -11,6 +13,8 @@ $stmt = $pdo->prepare("SELECT c.userId, c.email, c.contactNumber, ic.name AS ind
 $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
 
 $customers = $stmt->fetchAll();
+
+if ($search !== '' && count($customers) === 0) {$error = "No customer records found matching your search.";}
 
 $totalCustomers = $pdo->query("SELECT COUNT(*) FROM Customer")->fetchColumn();
 
@@ -54,9 +58,7 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
             </a>
 
             <nav class="menu">
-
-                <a class="link" href="customer_service_dashboard.php">Dashboard</a>
-
+                
                 <a class="link" href="register_corporate_customer.php">Register Customer</a>
 
                 <a class="link" href="update_customer.php">Update Customer</a>
@@ -134,6 +136,13 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
                 <h3>Manage Customers</h3>
 
                 <p style="margin-bottom:20px; color:#6b7280;">Search and manage individual and corporate customer records.</p>
+
+                <?php if (!empty($error)): ?>
+
+                    <div class="login-notice show"><?= $error ?></div>
+                    <br>
+                    
+                <?php endif; ?>
 
                 <form method="get" style="margin-bottom:25px;">
 
