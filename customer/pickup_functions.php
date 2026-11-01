@@ -2,22 +2,45 @@
 /**
  * HELMS - Pickup business logic (Customer: Create / Read / Update / Cancel)
  * Table: Pickup (see sql/HELMS.sql). Every function takes the project's $pdo.
+ * IDs are text (e.g. PCK-2026-000051); statuses are the ENUM values stored in the database.
  */
-const PICKUP_WINDOWS = ['08:00 - 10:00', '10:00 - 12:00', '12:00 - 14:00', '14:00 - 16:00', '16:00 - 18:00'];
+const PICKUP_WINDOWS = ['09:00-12:00', '13:00-16:00', '16:00-18:00'];
 
-// Status values used by the customer side. Staff (CSO / Transport) change these later.
-const PK_REQUESTED = 'Requested';
-const PK_APPROVED  = 'Approved';
-const PK_REJECTED  = 'Rejected';
-const PK_CANCELLED = 'Cancelled';
-const PK_ALL = [PK_REQUESTED, PK_APPROVED, PK_REJECTED, PK_CANCELLED, 'Successful', 'Failed'];
+// Must match Pickup.status ENUM in sql/HELMS.sql
+const PK_REQUESTED = 'REQUESTED';
+const PK_APPROVED  = 'APPROVED';
+const PK_REJECTED  = 'REJECTED';
+const PK_ASSIGNED  = 'ASSIGNED';
+const PK_PICKED_UP = 'PICKED_UP';
+const PK_FAILED    = 'FAILED';
+const PK_CANCELLED = 'CANCELLED';
+const PK_ALL = [PK_REQUESTED, PK_APPROVED, PK_ASSIGNED, PK_PICKED_UP, PK_REJECTED, PK_FAILED, PK_CANCELLED];
+
+/** Friendly text for a status value */
+function pickup_label(?string $s): string {
+    return [
+        PK_REQUESTED => 'Requested', PK_APPROVED => 'Approved', PK_ASSIGNED => 'Driver assigned',
+        PK_PICKED_UP => 'Picked up',  PK_REJECTED => 'Rejected', PK_FAILED => 'Failed',
+        PK_CANCELLED => 'Cancelled',
+    ][$s ?? ''] ?? (string)$s;
+}
+
+/** True if the text looks like a pickup id, e.g. PCK-2026-000051 */
+function pickup_valid_id(string $id): bool {
+    return (bool)preg_match('/^PCK-\d{4}-\d{6}$/', $id);
+}
+
+/** Character count that also works if the PHP mbstring extension is switched off */
+function pickup_len(string $s): int {
+    return function_exists('mb_strlen') ? mb_strlen($s) : strlen($s);
+}
 
 /** @return string[] error messages; empty = valid */
 function pickup_validate(array $d): array {
     $err  = [];
     $addr = trim($d['pickupAddress'] ?? '');
-    if (mb_strlen($addr) < 10)  $err[] = 'Pickup address must be at least 10 characters.';
-    if (mb_strlen($addr) > 255) $err[] = 'Pickup address must be 255 characters or fewer.';
+    if (pickup_len($addr) < 10)  $err[] = 'Pickup address must be at least 10 characters.';
+    if (pickup_len($addr) > 255) $err[] = 'Pickup address must be 255 characters or fewer.';
 
     $date = $d['pickupDate'] ?? '';
     $dt   = DateTime::createFromFormat('Y-m-d', $date);
@@ -29,26 +52,41 @@ function pickup_validate(array $d): array {
     return $err;
 }
 
-/** CREATE - returns the new pickupId (AUTO_INCREMENT) */
-function pickup_create(PDO $pdo, int $customerId, array $d): int {
-    $st = $pdo->prepare(
-        "INSERT INTO Pickup (requestedAt, pickupDate, preferredTimeWindow, pickupAddress, status, customerId)
-         VALUES (NOW(), ?, ?, ?, ?, ?)"
-    );
-    $st->execute([$d['pickupDate'], $d['preferredTimeWindow'], trim($d['pickupAddress']), PK_REQUESTED, $customerId]);
-    return (int)$pdo->lastInsertId();
+/** Next id for this year: PCK-YYYY-000001, PCK-YYYY-000002 ... */
+function pickup_next_id(PDO $pdo): string {
+    $year = date('Y');
+    $st = $pdo->prepare("SELECT MAX(CAST(SUBSTRING(pickupId, 10) AS UNSIGNED)) FROM Pickup WHERE pickupId LIKE ?");
+    $st->execute(['PCK-' . $year . '-%']);
+    return sprintf('PCK-%s-%06d', $year, (int)$st->fetchColumn() + 1);
+}
+
+/** CREATE - returns the new pickupId. Retries if two requests pick the same number at once. */
+function pickup_create(PDO $pdo, string $customerId, array $d): string {
+    $sql = "INSERT INTO Pickup (pickupId, requestedAt, pickupDate, preferredTimeWindow, pickupAddress, status, customerId)
+            VALUES (?, NOW(), ?, ?, ?, ?, ?)";
+    for ($try = 0; $try < 3; $try++) {
+        $id = pickup_next_id($pdo);
+        try {
+            $pdo->prepare($sql)->execute([$id, $d['pickupDate'], $d['preferredTimeWindow'],
+                                          trim($d['pickupAddress']), PK_REQUESTED, $customerId]);
+            return $id;
+        } catch (PDOException $e) {
+            if ($e->getCode() !== '23000' || $try === 2) throw $e;   // 23000 = duplicate key
+        }
+    }
+    throw new RuntimeException('Could not create pickup.');
 }
 
 /** READ list - this customer's pickups; optional status filter and search (id or address) */
-function pickup_list(PDO $pdo, int $customerId, string $status = '', string $q = ''): array {
+function pickup_list(PDO $pdo, string $customerId, string $status = '', string $q = ''): array {
     $sql = "SELECT * FROM Pickup WHERE customerId = ?";
     $p   = [$customerId];
     if ($status !== '' && in_array($status, PK_ALL, true)) { $sql .= " AND status = ?"; $p[] = $status; }
     $q = trim($q);
     if ($q !== '') {
-        $sql .= " AND (pickupAddress LIKE ? OR pickupId = ?)";
+        $sql .= " AND (pickupAddress LIKE ? OR pickupId LIKE ?)";
         $p[] = '%' . $q . '%';
-        $p[] = ctype_digit(ltrim($q, '#')) ? (int)ltrim($q, '#') : 0;
+        $p[] = '%' . $q . '%';
     }
     $st = $pdo->prepare($sql . " ORDER BY requestedAt DESC, pickupId DESC");
     $st->execute($p);
@@ -56,14 +94,15 @@ function pickup_list(PDO $pdo, int $customerId, string $status = '', string $q =
 }
 
 /** READ one - ownership enforced */
-function pickup_get(PDO $pdo, int $pickupId, int $customerId): ?array {
+function pickup_get(PDO $pdo, string $pickupId, string $customerId): ?array {
+    if (!pickup_valid_id($pickupId)) return null;
     $st = $pdo->prepare("SELECT * FROM Pickup WHERE pickupId = ? AND customerId = ?");
     $st->execute([$pickupId, $customerId]);
     return $st->fetch() ?: null;
 }
 
-/** UPDATE - only while still Requested (not yet approved by staff) */
-function pickup_update(PDO $pdo, int $pickupId, int $customerId, array $d): bool {
+/** UPDATE - only while still REQUESTED (not yet approved by staff) */
+function pickup_update(PDO $pdo, string $pickupId, string $customerId, array $d): bool {
     $st = $pdo->prepare(
         "UPDATE Pickup SET pickupDate = ?, preferredTimeWindow = ?, pickupAddress = ?
          WHERE pickupId = ? AND customerId = ? AND status = ?"
@@ -73,8 +112,8 @@ function pickup_update(PDO $pdo, int $pickupId, int $customerId, array $d): bool
     return $st->rowCount() > 0;
 }
 
-/** CANCEL - soft delete (keeps the record); allowed while Requested or Approved */
-function pickup_cancel(PDO $pdo, int $pickupId, int $customerId): bool {
+/** CANCEL - soft delete (keeps the record); allowed while REQUESTED or APPROVED */
+function pickup_cancel(PDO $pdo, string $pickupId, string $customerId): bool {
     $st = $pdo->prepare(
         "UPDATE Pickup SET status = ?, cancelledAt = NOW()
          WHERE pickupId = ? AND customerId = ? AND status IN (?, ?)"
@@ -87,18 +126,18 @@ function pickup_can_edit(array $p): bool   { return ($p['status'] ?? '') === PK_
 function pickup_can_cancel(array $p): bool { return in_array($p['status'] ?? '', [PK_REQUESTED, PK_APPROVED], true); }
 
 /** [status => count] for dashboard and filter tabs */
-function pickup_counts(PDO $pdo, int $customerId): array {
+function pickup_counts(PDO $pdo, string $customerId): array {
     $st = $pdo->prepare("SELECT status, COUNT(*) c FROM Pickup WHERE customerId = ? GROUP BY status");
     $st->execute([$customerId]);
     return $st->fetchAll(PDO::FETCH_KEY_PAIR);
 }
 
-/** Soonest upcoming pickup that is still live (Requested/Approved), or null */
-function pickup_next(PDO $pdo, int $customerId): ?array {
+/** Soonest upcoming pickup that is still live, or null */
+function pickup_next(PDO $pdo, string $customerId): ?array {
     $st = $pdo->prepare(
-        "SELECT * FROM Pickup WHERE customerId = ? AND status IN (?, ?) AND pickupDate >= CURDATE()
+        "SELECT * FROM Pickup WHERE customerId = ? AND status IN (?, ?, ?) AND pickupDate >= CURDATE()
          ORDER BY pickupDate ASC, pickupId ASC LIMIT 1"
     );
-    $st->execute([$customerId, PK_REQUESTED, PK_APPROVED]);
+    $st->execute([$customerId, PK_REQUESTED, PK_APPROVED, PK_ASSIGNED]);
     return $st->fetch() ?: null;
 }

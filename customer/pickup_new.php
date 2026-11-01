@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = pickup_validate($_POST);
     if (!$errors) {
         $id = pickup_create($pdo, $uid, $_POST);
-        cust_flash('success', "Pickup #$id requested. We will confirm it once our team has reviewed it.");
+        cust_flash('success', "Pickup $id requested. We will confirm it once our team has reviewed it.");
         header('Location: pickups.php');
         exit;
     }

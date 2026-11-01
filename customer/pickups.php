@@ -1,5 +1,5 @@
 <?php
-// READ (list): My pickups, with status tabs and search
+
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/pickup_functions.php';
 $uid     = cust_id();
@@ -20,7 +20,7 @@ cust_hero('PICKUP MANAGEMENT', 'My <span>pickups</span>',
       <div class="chips cu-tabs">
         <a class="<?= $status === '' ? 'active' : '' ?>" href="?<?= http_build_query(['q' => $q]) ?>"><span>All (<?= (int)array_sum($counts) ?>)</span></a>
         <?php foreach (PK_ALL as $s): if (empty($counts[$s]) && $status !== $s) continue; ?>
-          <a class="<?= $status === $s ? 'active' : '' ?>" href="?<?= http_build_query(['status' => $s, 'q' => $q]) ?>"><span><?= cust_h($s) ?> (<?= (int)($counts[$s] ?? 0) ?>)</span></a>
+          <a class="<?= $status === $s ? 'active' : '' ?>" href="?<?= http_build_query(['status' => $s, 'q' => $q]) ?>"><span><?= cust_h(pickup_label($s)) ?> (<?= (int)($counts[$s] ?? 0) ?>)</span></a>
         <?php endforeach; ?>
       </div>
 
@@ -37,18 +37,18 @@ cust_hero('PICKUP MANAGEMENT', 'My <span>pickups</span>',
         <tbody>
         <?php foreach ($pickups as $p): ?>
           <tr>
-            <td><strong>#<?= (int)$p['pickupId'] ?></strong></td>
+            <td><strong><?= cust_h($p['pickupId']) ?></strong></td>
             <td><?= cust_h($p['pickupDate']) ?></td>
             <td><?= cust_h($p['preferredTimeWindow']) ?></td>
             <td class="cu-addr"><?= cust_h($p['pickupAddress']) ?></td>
-            <td><span class="cu-badge cu-<?= cust_status_class($p['status']) ?>"><?= cust_h($p['status']) ?></span></td>
+            <td><span class="cu-badge cu-<?= cust_status_class($p['status']) ?>"><?= cust_h(pickup_label($p['status'])) ?></span></td>
             <td><div class="cu-row-actions">
-              <a class="btn btn-outline cu-sm" href="pickup_view.php?id=<?= (int)$p['pickupId'] ?>">View</a>
-              <?php if (pickup_can_edit($p)): ?><a class="btn btn-outline cu-sm" href="pickup_edit.php?id=<?= (int)$p['pickupId'] ?>">Edit</a><?php endif; ?>
+              <a class="btn btn-outline cu-sm" href="pickup_view.php?id=<?= urlencode($p['pickupId']) ?>">View</a>
+              <?php if (pickup_can_edit($p)): ?><a class="btn btn-outline cu-sm" href="pickup_edit.php?id=<?= urlencode($p['pickupId']) ?>">Edit</a><?php endif; ?>
               <?php if (pickup_can_cancel($p)): ?>
-                <form method="post" action="pickup_cancel.php" data-confirm="Pickup #<?= (int)$p['pickupId'] ?> will be cancelled. This cannot be undone.">
-                  <input type="hidden" name="csrf" value="<?= cust_h(cust_csrf()) ?>">
-                  <input type="hidden" name="id" value="<?= (int)$p['pickupId'] ?>">
+                <form method="post" action="pickup_cancel.php" data-confirm="Pickup <?= cust_h($p['pickupId']) ?> will be cancelled. This cannot be undone.">
+                  <input type="hidden" name="csrf_token" value="<?= cust_h(cust_csrf()) ?>">
+                  <input type="hidden" name="id" value="<?= cust_h($p['pickupId']) ?>">
                   <button class="btn cu-sm cu-danger" type="submit">Cancel</button>
                 </form>
               <?php endif; ?>

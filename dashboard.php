@@ -17,6 +17,18 @@ if (in_array($role, ['SystemAdmin'], true)) {
     exit;
 }
 
+if (in_array($role, ['Driver'], true)) {
+    header('Location: driver/driver_dashboard.php');
+    exit;
+}
+
+if (in_array($role, ['IndividualCustomer', 'CorporateCustomer'], true)) {
+    header('Location: customer/index.php');
+    exit;
+}
+
+
+
 $roleNames = [
     'SystemAdmin' => 'System Administrator',
     'ManagingDirector' => 'Managing Director',

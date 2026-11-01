@@ -4,7 +4,7 @@
     <ul><?php foreach ($errors as $er): ?><li><?= cust_h($er) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
 <form class="login-form" id="pickupForm" method="post" action="<?= cust_h($action) ?>" novalidate>
-  <input type="hidden" name="csrf" value="<?= cust_h(cust_csrf()) ?>">
+  <input type="hidden" name="csrf_token" value="<?= cust_h(cust_csrf()) ?>">
 
   <div class="form-row">
     <label for="pickupAddress">Pickup address</label>

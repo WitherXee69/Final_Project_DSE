@@ -1,4 +1,4 @@
-/** HELMS - customer pages: mobile menu, pickup form checks (server re-validates), cancel dialog */
+
 (function () {
   'use strict';
 

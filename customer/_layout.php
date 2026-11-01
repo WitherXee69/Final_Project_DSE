@@ -1,10 +1,10 @@
 <?php
 
 require_once __DIR__ . '/../config/database.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/../config/auth.php';   // starts the session, provides csrf_token() / verify_csrf()
 
-const CUST_DEMO_ID       = 1;      // userId of a row in Customer (see sql/demo_customer.sql)
-const CUST_REQUIRE_LOGIN = false;  // flip to true once login.php is implemented
+
+require_once __DIR__ . '/pickup_functions.php';
 
 const CUST_CHECK = '<svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
 const CUST_X     = '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -15,14 +15,25 @@ const CUST_PLUS  = '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14
 
 function cust_h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
-function cust_id(): int {
-    if (!empty($_SESSION['user_id'])) return (int)$_SESSION['user_id'];
-    if (CUST_REQUIRE_LOGIN) { header('Location: ../login.php?portal=customer'); exit; }
-    return CUST_DEMO_ID;
+/** Roles allowed in the customer portal (login.php stores the role name in the session). */
+function cust_is_customer_role(string $role): bool {
+    return in_array($role, ['IndividualCustomer', 'CorporateCustomer', 'CUSTOMER', 'Customer'], true);
 }
-function cust_is_demo(): bool { return empty($_SESSION['user_id']); }
 
-function cust_name(PDO $pdo, int $uid): string {
+/** Returns the signed-in customer's userId; sends visitors to the right place otherwise. */
+function cust_id(): string {
+    if (empty($_SESSION['user_id'])) {
+        header('Location: ../login.php?portal=customer');
+        exit;
+    }
+    if (!cust_is_customer_role((string)($_SESSION['role'] ?? ''))) {
+        header('Location: ../dashboard.php');      // staff / drivers have their own dashboards
+        exit;
+    }
+    return (string)$_SESSION['user_id'];
+}
+
+function cust_name(PDO $pdo, string $uid): string {
     if (!empty($_SESSION['full_name'])) return $_SESSION['full_name'];
     $st = $pdo->prepare("SELECT name FROM IndividualCustomer WHERE userId = ?");
     $st->execute([$uid]);
@@ -32,12 +43,9 @@ function cust_name(PDO $pdo, int $uid): string {
     return $st->fetchColumn() ?: 'Customer';
 }
 
-function cust_csrf(): string {
-    if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(16));
-    return $_SESSION['csrf'];
-}
+function cust_csrf(): string { return csrf_token(); }
 function cust_check_csrf(): void {
-    if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
+    if (!verify_csrf()) {
         http_response_code(403);
         exit('Invalid request token. Go back, refresh the page and try again.');
     }
@@ -51,8 +59,8 @@ function cust_show_flash(): void {
 }
 
 function cust_status_class(string $s): string {
-    return ['Requested' => 'warning', 'Approved' => 'good', 'Successful' => 'good',
-            'Rejected' => 'danger', 'Cancelled' => 'danger', 'Failed' => 'danger'][$s] ?? 'info';
+    return [PK_REQUESTED => 'warning', PK_APPROVED => 'good', PK_ASSIGNED => 'good', PK_PICKED_UP => 'good',
+            PK_REJECTED => 'danger', PK_CANCELLED => 'danger', PK_FAILED => 'danger'][$s] ?? 'info';
 }
 
 
@@ -71,12 +79,9 @@ function cust_header(PDO $pdo, string $title, string $active = 'pickups', string
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/style.css">
-<link rel="stylesheet" href="customer.css">
+<link rel="stylesheet" href="customer.css?v=<?= filemtime(__DIR__ . '/customer.css') ?>">
 </head>
 <body class="<?= cust_h($bodyClass) ?>">
-<?php if (cust_is_demo()): ?>
-<div class="welcome">Demo mode: sign-in is not connected yet, so you are viewing the sample customer account.</div>
-<?php endif; ?>
 <header>
   <div class="container nav">
     <a href="../index.php" class="brand" aria-label="HELMS home">
@@ -92,6 +97,7 @@ function cust_header(PDO $pdo, string $title, string $active = 'pickups', string
       <a class="link" href="pickup_new.php"<?= $nav('new') ?>>Request a Pickup</a>
       <span class="link cu-who"><?= cust_h($name) ?></span>
       <a class="btn btn-ghost" href="../index.php">Home</a>
+      <a class="btn btn-ghost" href="../logout.php">Logout</a>
     </nav>
   </div>
 </header>

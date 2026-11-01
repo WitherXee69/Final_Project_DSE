@@ -1,5 +1,4 @@
-/* HELMS - Customer module. Only adds what style.css doesn't already provide
-   (header, .hero, .pill, .portal, .ico, .band, .steps, .login-* and .field all come from ../assets/css/style.css) */
+
 .cu-page{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
 .cu-page.login-page{background:radial-gradient(900px 500px at 0% 0%,rgba(29,74,133,.18),transparent 65%),var(--bg)}
 .cu-page>.cu-section,.cu-page>.cu-over{flex:none}
