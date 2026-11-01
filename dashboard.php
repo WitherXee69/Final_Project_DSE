@@ -27,7 +27,10 @@ if (in_array($role, ['IndividualCustomer', 'CorporateCustomer'], true)) {
     exit;
 }
 
-
+if (in_array($role, ['TransportManager'], true)) {
+    header('Location: transportMgr/transportMgr_dashboard.php');
+    exit;
+}
 
 $roleNames = [
     'SystemAdmin' => 'System Administrator',
