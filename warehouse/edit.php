@@ -1,41 +1,18 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/_layout.php';
+require_once __DIR__ . '/warehouse_methods.php';
 
 $id = trim($_GET['id'] ?? '');
 $error = '';
 $parcel = null;
 
-$categories = [
-    'HOUSEHOLD',
-    'DOCUMENT',
-    'COMMERCIAL',
-    'PERSONAL',
-    'ELECTRONICS'
-];
-
-$serviceTypes = [
-    'STANDARD',
-    'EXPRESS'
-];
-
-$intakeMethods = [
-    'PICKUP',
-    'WALK_IN'
-];
+$categories     = WH_CATEGORIES;
+$serviceTypes   = WH_SERVICE_TYPES;
+$intakeMethods  = ['PICKUP', 'WALK_IN'];
 
 if ($id !== '') {
     try {
-        $stmt = $pdo->prepare("
-            SELECT *
-            FROM Parcel
-            WHERE parcelId = :parcelId
-            LIMIT 1
-        ");
-
-        $stmt->execute(['parcelId' => $id]);
-        $parcel = $stmt->fetch();
-
+        $parcel = viewParcelDetails($pdo, $id);
     } catch (PDOException $e) {
         error_log('Warehouse edit retrieval error: ' . $e->getMessage());
         $error = 'Unable to retrieve parcel information.';
@@ -61,97 +38,22 @@ if (!$parcel) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $description = trim($_POST['description'] ?? '');
-    $category = $_POST['parcelCategory'] ?? '';
-    $serviceType = $_POST['serviceType'] ?? '';
-    $intakeMethod = $_POST['intakeMethod'] ?? '';
-    $declaredWeight = trim($_POST['declaredWeight'] ?? '');
-    $dimensions = trim($_POST['dimensions'] ?? '');
-    $isFragile = isset($_POST['isFragile']) ? 1 : 0;
-
-    if ($description === '') {
-        $error = 'Description cannot be empty.';
-    } elseif (strlen($description) > 255) {
-        $error = 'Description cannot exceed 255 characters.';
-    }
-
-    elseif (!in_array($category, $categories, true)) {
-        $error = 'Select a valid parcel category.';
-    }
-
-    elseif (!in_array($serviceType, $serviceTypes, true)) {
-        $error = 'Select a valid service type.';
-    }
-
-    elseif (!in_array($intakeMethod, $intakeMethods, true)) {
-        $error = 'Select a valid intake method.';
-    }
-
-    elseif (
-        $declaredWeight !== '' &&
-        (!is_numeric($declaredWeight) || (float)$declaredWeight < 0)
-    ) {
-        $error = 'Enter a valid declared weight.';
-    }
-
-    elseif (strlen($dimensions) > 50) {
-        $error = 'Dimensions cannot exceed 50 characters.';
-    }
-
-    if ($error === '') {
-
-        try {
-            $stmt = $pdo->prepare("
-                UPDATE Parcel
-                SET
-                    description = :description,
-                    parcelCategory = :category,
-                    isFragile = :isFragile,
-                    serviceType = :serviceType,
-                    intakeMethod = :intakeMethod,
-                    declaredWeight = :declaredWeight,
-                    dimensions = :dimensions
-
-                WHERE parcelId = :parcelId
-            ");
-
-            $stmt->execute([
-                'description' => $description,
-                'category' => $category,
-                'isFragile' => $isFragile,
-                'serviceType' => $serviceType,
-                'intakeMethod' => $intakeMethod,
-                'declaredWeight' => $declaredWeight === ''
-                    ? null
-                    : $declaredWeight,
-                'dimensions' => $dimensions === ''
-                    ? null
-                    : $dimensions,
-                'parcelId' => $id
-            ]);
-
-            header(
-                'Location: view.php?id=' .
-                urlencode($id) .
-                '&updated=1'
-            );
-            exit;
-
-        } catch (PDOException $e) {
-            error_log('Warehouse parcel update error: ' . $e->getMessage());
-            $error = 'Unable to save parcel changes. Please try again.';
-        }
+    try {
+        updateParcelDetails($pdo, $id, $_POST);
+        header('Location: view.php?id=' . urlencode($id) . '&updated=1');
+        exit;
+    } catch (RuntimeException $e) {
+        $error = $e->getMessage();
     }
 
     // Preserve submitted values when validation fails.
-    $parcel['description'] = $description;
-    $parcel['parcelCategory'] = $category;
-    $parcel['isFragile'] = $isFragile;
-    $parcel['serviceType'] = $serviceType;
-    $parcel['intakeMethod'] = $intakeMethod;
-    $parcel['declaredWeight'] = $declaredWeight;
-    $parcel['dimensions'] = $dimensions;
+    $parcel['description']    = trim($_POST['description'] ?? '');
+    $parcel['parcelCategory'] = $_POST['parcelCategory'] ?? '';
+    $parcel['isFragile']      = isset($_POST['isFragile']) ? 1 : 0;
+    $parcel['serviceType']    = $_POST['serviceType'] ?? '';
+    $parcel['intakeMethod']   = $_POST['intakeMethod'] ?? '';
+    $parcel['declaredWeight'] = trim($_POST['declaredWeight'] ?? '');
+    $parcel['dimensions']     = trim($_POST['dimensions'] ?? '');
 }
 
 wh_header('Edit parcel details', 'parcels');

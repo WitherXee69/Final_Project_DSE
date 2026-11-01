@@ -1,7 +1,6 @@
-
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/_layout.php';
+require_once __DIR__ . '/warehouse_methods.php';
 
 $id = trim($_GET['id'] ?? '');
 $parcel = null;
@@ -9,52 +8,7 @@ $databaseError = false;
 
 if ($id !== '') {
     try {
-        $stmt = $pdo->prepare("
-            SELECT
-                p.*,
-
-                COALESCE(
-                    NULLIF(ic.name, ''),
-                    NULLIF(cc.companyName, ''),
-                    c.userId
-                ) AS customerName,
-
-                c.contactNumber AS customerPhone,
-                c.email AS customerEmail,
-                c.address AS customerAddress,
-
-                r.receiverName,
-                r.receiverPhone,
-                r.receiverAddress,
-                r.zoneCode AS receiverZone,
-
-                w.warehouseName,
-                w.zoneCode AS warehouseZone
-
-            FROM Parcel p
-
-            LEFT JOIN Customer c
-                ON p.customerId = c.userId
-
-            LEFT JOIN IndividualCustomer ic
-                ON c.userId = ic.userId
-
-            LEFT JOIN CorporateCustomer cc
-                ON c.userId = cc.userId
-
-            LEFT JOIN Receiver r
-                ON p.receiverId = r.receiverId
-
-            LEFT JOIN Warehouse w
-                ON p.warehouseId = w.warehouseId
-
-            WHERE p.parcelId = :parcelId
-            LIMIT 1
-        ");
-
-        $stmt->execute(['parcelId' => $id]);
-        $parcel = $stmt->fetch();
-
+        $parcel = viewParcelDetails($pdo, $id);
     } catch (PDOException $e) {
         error_log('Warehouse parcel view error: ' . $e->getMessage());
         $databaseError = true;
@@ -269,7 +223,7 @@ $yesNo = static function ($value) {
 
         </div>
 
-    <div class="wh-form-actions wh-form-actions-spaced">
+        <div class="wh-form-actions wh-form-actions-spaced">
 
             <a class="wh-btn"
                href="edit.php?id=<?= urlencode($parcel['parcelId']) ?>">
