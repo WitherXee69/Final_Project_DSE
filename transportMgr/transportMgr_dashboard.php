@@ -145,7 +145,7 @@ foreach ($drivers as $driver) {
 
     <link rel="stylesheet" href="../assets/css/style.css">
 
-    <link rel="stylesheet" href="assets/css/transport-manager-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/transportMgr-dashboard.css">
 
 </head>
 
@@ -168,7 +168,7 @@ foreach ($drivers as $driver) {
 
         <nav class="tm-menu">
 
-            <a href="transport_manager_dashboard.php" class="active">
+            <a href="transportMgr_dashboard.php" class="active">
                 Dashboard
             </a>
 
@@ -351,7 +351,7 @@ foreach ($drivers as $driver) {
 
         <form
             method="POST"
-            action="transport_manager_actions.php"
+            action="transportMgr_actions.php"
             class="tm-form"
         >
 
@@ -519,7 +519,7 @@ foreach ($drivers as $driver) {
 
                                 <form
                                     method="POST"
-                                    action="transport_manager_actions.php"
+                                    action="transportMgr_actions.php"
                                     class="tm-update-form"
                                 >
 
@@ -590,7 +590,7 @@ foreach ($drivers as $driver) {
 
                                 <form
                                     method="POST"
-                                    action="transport_manager_actions.php"
+                                    action="transportMgr_actions.php"
                                     onsubmit="return confirm('Are you sure you want to delete this driver?');"
                                 >
 

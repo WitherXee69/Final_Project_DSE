@@ -23,7 +23,7 @@ function redirect_dashboard($message, $type = 'success')
     $_SESSION['transportMgr_message'] = $message;
     $_SESSION['transportMgr_message_type'] = $type;
 
-    header('Location: transport_manager_dashboard.php');
+    header('Location: transportMgr_dashboard.php');
     exit;
 }
 
@@ -55,7 +55,7 @@ function get_posted_id($field)
 
 // Only allow POST requests.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: transport_manager_dashboard.php');
+    header('Location: transportMgr_dashboard.php');
     exit;
 }
 
