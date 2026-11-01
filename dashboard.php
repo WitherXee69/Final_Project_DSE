@@ -32,6 +32,16 @@ if (in_array($role, ['TransportManager'], true)) {
     exit;
 }
 
+if (in_array($role, ['ManagingDirector'], true)) {
+    header('Location: managing_director/index.php');
+    exit;
+}
+
+if (in_array($role, ['CustomerServiceManager'], true)) {
+    header('Location: customer_service_manager/customer_service_dashboard.php');
+    exit;
+}
+
 $roleNames = [
     'SystemAdmin' => 'System Administrator',
     'ManagingDirector' => 'Managing Director',
