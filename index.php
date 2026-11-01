@@ -1,14 +1,5 @@
 <?php
-/**
- * HELMS - Henowic Enterprise Logistics Management System
- * Home page (index.php) - the first page for customers, staff and drivers.
- *
- * Expected routes (change to match your project):
- *   login.php?portal=customer|staff|driver   -> login form
- *   register.php?type=individual|corporate   -> customer registration (FR-010, FR-015)
- *   track.php?id=XXXX                        -> parcel tracking
- *   dashboard.php                            -> role-based dashboard after login
- */
+
 session_start();
 
 require_once __DIR__ . '/config/database.php';
