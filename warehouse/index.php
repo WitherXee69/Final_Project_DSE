@@ -108,9 +108,12 @@ wh_header('Warehouse overview', 'dashboard');
         <strong><?= $percent ?>%</strong>
     </div>
 
-    <div class="wh-progress">
-        <span style="width:<?= $percent ?>%"></span>
-    </div>
+    <progress
+        class="wh-progress"
+        value="<?= $percent ?>"
+        max="100"
+        aria-label="Warehouse capacity used"
+    ><?= $percent ?>%</progress>
 
     <p class="wh-muted">
         <?= $currentLoad ?> of <?= $totalCapacity ?>

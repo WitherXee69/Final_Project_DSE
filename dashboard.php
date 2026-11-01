@@ -16,6 +16,11 @@ if (in_array($role, ['SystemAdmin'], true)) {
     exit;
 }
 
+if ($role === 'ManagingDirector') {
+    header('Location: managing_director/index.php');
+    exit;
+}
+
 $roleNames = [
     'SystemAdmin' => 'System Administrator',
     'ManagingDirector' => 'Managing Director',
