@@ -226,7 +226,12 @@ if (!empty($search)) {
 
                     </div>
 
-                    <button class="btn btn-primary login-submit" type="submit">Update Customer</button>
+                    <div style="display:flex; gap:10px;">
+
+                            <button class="btn btn-primary login-submit" type="submit">Update Customer</button>
+                            <button style="background: #0b1f3a; color:white;" class="btn btn-primary" type="button" onclick="window.location.href='deactivate_customer.php'">Clear</button>
+
+                        </div>
 
                 </form>
 

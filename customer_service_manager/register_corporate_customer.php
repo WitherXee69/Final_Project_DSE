@@ -175,6 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php if (!empty($error)): ?>
 
                 <div class="login-notice show"><?= $error ?></div>
+                <br>
 
             <?php endif; ?>
 
@@ -183,42 +184,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="form-row">
 
                     <label for="companyName">Company Name</label>
-                    <input id="companyName" name="companyName" type="text" placeholder="Enter company name" required>
+                    <input id="companyName" name="companyName" type="text" placeholder="Enter company name" value="<?= htmlspecialchars($_POST['companyName'] ?? '') ?>" required>
 
                 </div>
 
                 <div class="form-row">
 
                     <label for="contactPerson">Contact Person</label>
-                    <input id="contactPerson" name="contactPerson" type="text" placeholder="Enter contact person" required>
+                    <input id="contactPerson" name="contactPerson" type="text" placeholder="Enter contact person" value="<?= htmlspecialchars($_POST['contactPerson'] ?? '') ?>" required>
 
                 </div>
 
                 <div class="form-row">
 
                     <label for="email">Company Email</label>
-                    <input id="email" name="email" type="email" placeholder="company@example.com" required>
+                    <input id="email" name="email" type="email" placeholder="company@example.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
 
                 </div>
 
                 <div class="form-row">
 
                     <label for="contactNumber">Contact Number</label>
-                    <input id="contactNumber" name="contactNumber" type="text" placeholder="+94XXXXXXXXX" required>
+                    <input id="contactNumber" name="contactNumber" type="text" placeholder="+94XXXXXXXXX" value="<?= htmlspecialchars($_POST['contactNumber'] ?? '') ?>" required>
 
                 </div>
 
                 <div class="form-row">
 
                     <label for="address">Company Address</label>
-                    <textarea id="address" name="address" rows="3" placeholder="Enter company address" required></textarea>
+                    <textarea id="address" name="address" rows="3" placeholder="Enter company address" required><?= htmlspecialchars($_POST['address'] ?? '') ?></textarea>
 
                 </div>
 
                 <div class="form-row">
 
                     <label for="username">Username</label>
-                    <input id="username" name="username" type="text" placeholder="Enter username" autocomplete="off" required>
+                    <input id="username" name="username" type="text" placeholder="Enter username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" autocomplete="off" required>
 
                 </div>
 
@@ -236,7 +237,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 </div>
 
-                <button class="btn btn-primary login-submit" type="submit">Register Corporate Customer</button>
+                <div style="display:flex; gap:10px;">
+
+                    <button class="btn btn-primary login-submit" type="submit">Register Corporate Customer</button>
+
+                    <button class="btn btn-outline login-submit" type="button" onclick="window.location.href='register_corporate_customer.php'">Clear</button>
+
+                </div>
 
             </form>
 

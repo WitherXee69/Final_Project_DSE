@@ -55,13 +55,15 @@ $individualCustomers = $totalCustomers - $corporateCustomers;
 
             <nav class="menu">
 
-                <a class="link" href="#">Dashboard</a>
+                <a class="link" href="customer_service_dashboard.php">Dashboard</a>
 
-                <a class="link" href="#customers">Customers</a>
+                <a class="link" href="register_corporate_customer.php">Register Customer</a>
 
-                <a class="link" href="#">Corporate</a>
+                <a class="link" href="update_customer.php">Update Customer</a>
 
-                <a class="btn btn-ghost" href="index.php">Home</a>
+                <a class="link" href="deactivate_customer.php">Deactivate Customer</a>
+
+                <a class="btn btn-ghost" href="../index.php">Home</a>
 
             </nav>
 
