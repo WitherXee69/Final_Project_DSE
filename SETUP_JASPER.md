@@ -1,92 +1,145 @@
-# Managing Director dashboard + JasperReports - setup
+# HELMS – JasperReports Setup Guide
 
-## How it works (one minute)
+This guide explains how to configure JasperReports for the Managing Director portal.
 
+## 1. Prerequisites
+
+Ensure the following are installed:
+
+- PHP 7.4 or newer
+- Apache and MySQL/MariaDB
+- Java 8 or newer
+- JasperStarter
+- MySQL Connector/J
+- Jaspersoft Studio (optional, for editing reports)
+
+## 2. Installation
+
+### Step 1 – Install Java
+
+Install Java and verify the installation using Command Prompt:
+
+```bash
+java -version
 ```
-MD picks a report in the dropdown
-        |
-managing_director/report_view.php   (checks the user is ManagingDirector)
-        |   starts Java with JasperStarter (a download that contains JasperReports)
-reports/payment_report.jrxml  <-- you edit these in Jaspersoft Studio
-        |   JasperStarter reads the HELMS database through JDBC
-PDF is sent back and shown in the page
+
+### Step 2 – Download JasperStarter
+
+Download JasperStarter and extract it to:
+
+```text
+C:\jasperstarter
 ```
 
-* **No Composer, no PHP libraries.** PHP just starts one program.
-* The four templates are in `reports/` - edit them freely, no PHP change needed.
-* PHP **7.4 or newer** is required (XAMPP 8.x is fine).
+Verify that this file exists:
 
-## One-time setup (about 10 minutes)
-
-### 1. Copy the files
-Unzip over your project folder (keep the folder structure). New: `managing_director/`, `reports/`,
-`config/jasper.php`, `assets/css/md.css`. Changed: `dashboard.php` (4 added lines that send the
-Managing Director to the new page).
-
-### 2. Install Java
-Open a terminal and run `java -version`. Any Java 8 or newer works (11, 17, 21 are all fine).
-
-### 3. Download JasperStarter
-Download the **JasperStarter** zip (it already includes JasperReports - search "JasperStarter" and
-use the SourceForge / GitHub release page) and unzip it to `C:\jasperstarter`
-so that `C:\jasperstarter\lib\jasperstarter.jar` exists.
-
-### 4. Download the MySQL driver
-Download **MySQL Connector/J** (choose "Platform Independent", unzip) and copy the
-`mysql-connector-j-8.x.x.jar` file into `C:\jasperstarter\jdbc\` (any folder is fine).
-
-### 5. Edit `config/jasper.php`
-Set `JASPER_LIB_DIR` and `JASPER_MYSQL_JAR` (use the exact jar file name). If `java -version` works in a
-terminal but reports fail, put the full path to `java.exe` in `JASPER_JAVA`.
-The database login is read automatically from `config/database.php`.
-
-### 6. Give the Managing Director a password
-The sample data uses placeholder hashes, so nobody can log in as `md.fernando` yet. Make a real hash:
-
+```text
+C:\jasperstarter\lib\jasperstarter.jar
 ```
+
+### Step 3 – Install MySQL Connector/J
+
+Download the [MySQL Connector/J driver](https://dev.mysql.com/downloads/connector/j/).
+
+Select the **Platform Independent** package and copy the extracted `.jar` file into:
+
+```text
+C:\jasperstarter\jdbc\
+```
+
+### Step 4 – Configure JasperReports
+
+Open `config/jasper.php` and update the paths to match your installation:
+
+```php
+const JASPER_JAVA = 'java';
+const JASPER_LIB_DIR = 'C:/jasperstarter/lib';
+const JASPER_MYSQL_JAR = 'C:/jasperstarter/jdbc/mysql-connector-j-8.x.x.jar';
+const JASPER_DB_DRIVER = 'com.mysql.cj.jdbc.Driver';
+const JASPER_DB_PORT = 3306;
+const JASPER_DEBUG = true;
+```
+
+Replace the example JAR filename with the one you downloaded.
+
+**Note:** Database credentials are read automatically from `config/database.php`. If Apache cannot locate Java, specify the full path to `java.exe` in `JASPER_JAVA`.
+
+## 3. Test JasperStarter
+
+Create an empty directory:
+
+```text
+C:\jasperstarter\empty
+```
+
+Open Command Prompt in the HELMS project directory and run the following command. Adjust the Connector/J filename and database credentials if necessary.
+
+```bash
+java -cp "C:\jasperstarter\lib\*;C:\jasperstarter\jdbc\mysql-connector-j-8.x.x.jar" de.cenote.jasperstarter.App process reports\payment_report.jrxml -f pdf -o test -t generic --jdbc-dir C:\jasperstarter\empty --db-driver com.mysql.cj.jdbc.Driver --db-url "jdbc:mysql://localhost:3306/HELMS?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true" -u root -P REPORT_ID=RPT-PAY-2026-10
+```
+
+If your database user has a password, add `-p YOUR_DATABASE_PASSWORD` before `-P`.
+
+Replace the sample report ID with an ID that exists in your database.
+
+A successful run should generate `test.pdf` in the project directory.
+
+## 4. Managing Director Login
+
+If the sample Managing Director account uses a placeholder password hash, generate a new one:
+
+```bash
 php -r "echo password_hash('md12345', PASSWORD_DEFAULT);"
 ```
 
-then in phpMyAdmin run (paste your hash):
+Update the account in phpMyAdmin using the generated hash:
 
 ```sql
-UPDATE User SET passwordHash = '<paste hash here>' WHERE username = 'md.fernando';
+UPDATE User
+SET passwordHash = '<generated hash>'
+WHERE username = 'md.fernando';
 ```
 
-Log in at `login.php?portal=staff` as `md.fernando` - you land on the new dashboard.
+Log in through `login.php?portal=staff` using the `md.fernando` account.
 
-## Test without PHP (do this first if something fails)
+## 5. Editing Reports
 
-Run from the project folder (adjust the jar name):
+The project includes four report templates in `reports/`:
 
-```
-java -cp "C:\jasperstarter\lib\*;C:\jasperstarter\jdbc\mysql-connector-j-8.4.0.jar" de.cenote.jasperstarter.App process reports\payment_report.jrxml -f pdf -o test -t generic --jdbc-dir C:\jasperstarter\empty --db-driver com.mysql.cj.jdbc.Driver --db-url "jdbc:mysql://localhost:3306/HELMS?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true" -u root -P REPORT_ID=RPT-PAY-2026-10
-```
+- `payment_report.jrxml`
+- `delivery_report.jrxml`
+- `storage_report.jrxml`
+- `customer_report.jrxml`
 
-(Create an empty folder `C:\jasperstarter\empty` first.) If `test.pdf` appears, Jasper works and the PHP side will too.
+Open a template in Jaspersoft Studio to edit its design or query.
 
-## Editing a report design
+**Important:** Preserve the `REPORT_ID` String parameter used by the application when modifying existing templates.
 
-1. Install **Jaspersoft Studio** (free) and open `reports/payment_report.jrxml`.
-2. The query is under the report's *Dataset and Query*; it has one parameter, `REPORT_ID`.
-3. Save the file, then click **View report** again - the page picks up the change straight away.
+Changes are picked up when the report is opened again.
 
-Amounts show as `LKR`. To change it, edit the `pattern` of the text fields (search for `'LKR'`).
+## 6. Troubleshooting
 
-## Adding a fifth report later
-1. Save a new `.jrxml` in `reports/` with a `REPORT_ID` String parameter.
-2. Add one entry to `md_report_types()` in `managing_director/report_methods.php`.
-
-## Troubleshooting
-
-| Message on the page | Fix |
+| Error | Solution |
 |---|---|
-| `JasperStarter lib folder not found` / `MySQL driver jar not found` | Wrong `JASPER_LIB_DIR` or `JASPER_MYSQL_JAR` in `config/jasper.php` (check the exact jar file name). |
-| `proc_open() is disabled` | Remove `proc_open` from `disable_functions` in `php.ini`, restart Apache. |
-| `Could not start Java` / `'java' is not recognized` | Put the full path to `java.exe` in `JASPER_JAVA`, or restart Apache after installing Java. |
-| `No suitable driver` / `ClassNotFoundException ... mysql` | `JASPER_MYSQL_JAR` points to the wrong file, or `JASPER_DB_DRIVER` does not match the jar version (8.x = `com.mysql.cj.jdbc.Driver`). |
-| `Access denied for user` | Check `config/database.php` credentials. |
-| Blank report / only titles | The `REPORT_ID` does not exist in that table. |
-| Error mentions an unknown attribute after editing in Studio | Studio saved a newer format than JasperStarter understands: in Studio preferences set the *Compatibility* version to an older JasperReports release. |
+| JasperStarter library not found | Check `JASPER_LIB_DIR`. |
+| MySQL driver not found | Check `JASPER_MYSQL_JAR` and its filename. |
+| `proc_open()` is disabled | Enable `proc_open` in `php.ini` and restart Apache. |
+| Java not found | Check `JASPER_JAVA` or configure the system PATH. |
+| No suitable driver | Verify the Connector/J JAR and `JASPER_DB_DRIVER`. |
+| Access denied | Check database credentials in `config/database.php`. |
+| Report not found or blank | Verify the `REPORT_ID` and report query. |
+| Unknown attribute in report template | Check compatibility between the Jaspersoft Studio and JasperReports versions. |
 
-Set `JASPER_DEBUG` to `false` before the final demo so users never see technical text.
+For development, keep:
+
+```php
+const JASPER_DEBUG = true;
+```
+
+Before the final demonstration, change it to:
+
+```php
+const JASPER_DEBUG = false;
+```
+
+Technical errors will still be recorded in the PHP error log.
